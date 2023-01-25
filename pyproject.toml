@@ -1,6 +1,6 @@
 [project]
-name = "project_name"
-version = "0.0.0"
+name = "project_name or module_name"
+# version = "0.0.0"
 description = "A_short_description"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -18,6 +18,11 @@ classifiers = [
 dependencies = [
    'pytest'
 ]
+# If project is a module, then fetch version from module_name.__init__.py
+# dynamic = ["version"]
+
+# [tool.setuptools.dynamic]
+# version = {attr = "module_name.__version__"}
 
 [project.optional-dependencies]
 test = [
