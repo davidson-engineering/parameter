@@ -1,0 +1,41 @@
+[project]
+name = "project_name"
+version = "0.0.0"
+description = "A_short_description"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+  {email = "matthew.davidson@generalfusion.com"},
+  {name = "Matthew Davidson"}
+]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.10",
+]
+
+dependencies = [
+   'pytest'
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest < 5.0.0",
+  "pytest-cov[all]"
+]
+
+[project.urls]
+homepage = "https://example.com"
+documentation = "https://readthedocs.org"
+repository = "https://github.com"
+changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+
+#[project.scripts]
+#spam-cli = "spam:main_cli"
+
+#[project.gui-scripts]
+#spam-gui = "spam:main_gui"
+
+#[project.entry-points."spam.magical"]
+#tomatoes = "spam:main_tomatoes"
