@@ -7,5 +7,5 @@
 output/
 build/
 *.html
-# .vscode/
-# .env
+.vscode/
+.env
