@@ -27,7 +27,7 @@ dependencies = [
 
 # If a module, then use fetch version from src/module_name/__init__.py
 [tool.setuptools.dynamic]
-version = {attr = "module_name.__version__"}
+version = {attr = "parameter.__version__"}
 
 [project.optional-dependencies]
 test = [
