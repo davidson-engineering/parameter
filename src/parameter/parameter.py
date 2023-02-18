@@ -163,15 +163,19 @@ class Parameter:
 def factor(data, factor):
     return [d * factor for d in data] if is_iterable(data) else data * factor
 
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 def dict_to_parameters(d, convert_to_si=False):
-    parameters = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            for kk, vv in v.items():
-                parameters[f"{k}_{kk}"] = Parameter(*vv)
-        else:
-            parameters[k] = Parameter(*v)
+    flattened_dict = flatten_dict(d)
+    parameters = {key: Parameter(*val) for key, val in flattened_dict.items()}
     if convert_to_si:
         parameters = {key: val.convert_to_SI() for key, val in parameters.items()}
     return parameters
