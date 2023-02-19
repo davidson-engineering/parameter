@@ -1,0 +1,13 @@
+test_parameters:
+  base_zheight: [0, m]
+  nacelle_mass: [1500, g]
+  nacelle_radius: [150, mm]
+  arm_reference_angles:
+    0: [0, deg]
+    1: [120, deg]
+    2: [240, deg]
+  distal_cogs: [0.5, -]
+  end_affector_cog: 
+    x: [0, mm]
+    y: [0, mm]
+    z: [0, mm]

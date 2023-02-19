@@ -1,4 +1,4 @@
-from parameter.parameter import Parameter
+from parameter.parameter import Parameter, tabulate_object_attrs
 
 def test_parameter():
     param_a = Parameter(1, "m")
@@ -25,3 +25,12 @@ def test_parameter():
     assert param_f.convert_to_SI().units == "rad/s"
     assert param_g.convert_to_SI().value - 1.7453292519943295 < eps
     assert param_g.convert_to_SI().units == "rad/s"
+
+def test_build_from_yaml():
+    from parameter.parameter import parse_yaml_to_parameters, Parameters
+    parameters = Parameters(parse_yaml_to_parameters("test/input_file.yaml")["test_parameters"])
+    table = parameters.as_table()
+    print("")
+    print(table)
+    table_SI = parameters.to_SI().as_table()
+    print(table_SI)
