@@ -1,4 +1,5 @@
 # This file can be used to specify the dependencies for automated testing on github
 pytest==7.2.1
 pyyaml==6.0
+prettytable==3.6.0
 parameter @ git+https://github.com/davidson-engineering/parameter.git

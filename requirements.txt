@@ -1,0 +1,10 @@
+attrs==22.2.0
+colorama==0.4.6
+iniconfig==2.0.0
+packaging==23.0
+-e git+https://github.com/davidson-engineering/parameter.git@391b33009560cdc550774a6266e9bd665519ef6b#egg=parameter
+pluggy==1.0.0
+prettytable==3.6.0
+pytest==7.2.1
+PyYAML==6.0
+wcwidth==0.2.6
