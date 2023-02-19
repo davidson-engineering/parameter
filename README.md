@@ -7,7 +7,7 @@
 - A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
 
 
-```
+```python
     param_a = Parameter(1, "m")
     param_b = Parameter(2, "mm")
     param_c = Parameter([3,4,5], "mm/s")
@@ -18,7 +18,7 @@
 
 ```
 # Read parameters from .yaml file, and print a neat table
-```
+```python
     from parameter.parameter import parse_yaml_to_parameters, Parameters
 
     # Read in a .yaml file containing nested dictionaries of parameters
@@ -37,7 +37,7 @@
 
 ```
 
-```
+```python
     @dataclass
     class ParametersSubclass(Parameters):
         param_a: Parameter
@@ -45,9 +45,12 @@
         param_c: Parameter
 
 
-     dict = {
+     param_dict = {
         param_a: Parameter(1, "m"),
         param_b: Parameter(2, "mm"),
         param_c: Parameter([3,4,5], "mm/s"),
      }
+
+    params_subclass_object = ParameterSubclass(**param_dict)
+    params_subclass_object_si = params_subclass_object.to_SI()
 ```
