@@ -6,6 +6,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import dataclasses
+import logging
 from pathlib import Path
 import copy
 import re
@@ -38,6 +39,8 @@ def read_yaml(filepath: str | Path) -> dict:
         path = Path.cwd() / path
     with open(path, "r") as file:
         return safe_load(file)
+
+
 
 @dataclass
 class Parameter:
@@ -72,60 +75,72 @@ class Parameter:
         """
         param_new = copy.deepcopy(self)
 
-        def multiply_factor(unit_components):
-            if len(unit_components) == 1:
+
+        def split_string_with_separators(s):
+            # Define a regular expression to match separators
+            sep_pattern = r'[/.^]'
+
+            # Use re.split to split the string on the separator pattern
+            parts = re.split(sep_pattern, s)
+
+            # Use re.findall to find all occurrences of the separator pattern in the original string
+            seps = re.findall(sep_pattern, s)
+
+            # Return the parts and separators as a tuple
+            return parts, seps
+
+
+        def find_indexes_of_char(string_list, char: str):
+            return [i for i, s in enumerate(string_list) if char in s]
+
+
+        def get_factors(unit_components, separators):
+            '''
+            Get the conversion factors for the units
+            '''
+
+            if len(separators) == 0:
                 return FACTORS[unit_components[0]]
-            elif len(unit_components) >= 2:
-                product = lambda x: x[0] * product(x[1:]) if x else 1
-                factors = tuple(
-                    FACTORS[component] for component in unit_components
-                )
-                return product(factors)
 
-            else:
-                raise ValueError("Invalid units")
+            power_idxs = find_indexes_of_char(separators, "^")
+            power_factors = [FACTORS[unit_components[idx]] ** int(unit_components[idx+1]) for idx in power_idxs]
 
-        def divide_factor(unit_components):
-            '''Divide the units by "/"'''
-            if len(unit_components) == 1:
-                return unit_components[0]
-            elif len(unit_components) >= 2:
-                divided = unit_components[0]
-                for component in unit_components[1:]:
-                    divided /= component
-                return divided
+            multiply_idxs = find_indexes_of_char(separators, ".")
+            multiply_factors = [FACTORS[unit_components[idx]] * FACTORS[unit_components[idx+1]] for idx in multiply_idxs]
 
-            else:
-                raise ValueError("Invalid units")
+            divide_idxs = find_indexes_of_char(separators, "/")
+            divide_factors = [FACTORS[unit_components[idx]] / FACTORS[unit_components[idx+1]] for idx in divide_idxs]
+            
+            product = lambda x: x[0] * product(x[1:]) if x else 1
+            return product(power_factors + multiply_factors + divide_factors)
 
-        def split_multiply_factors(unit_components):
-            '''Split the units by "."'''
-            factors = []
-            for component in unit_components:
-                if component != "":
-                    multiply_factor_components = component.split(".")
-                    factors.append(multiply_factor(multiply_factor_components))
-            return factors
 
         def get_SI_factor(units):
             '''Convert the units to SI units'''
-            divide_factor_components = units.split("/")
-            split_mutliply_factors = split_multiply_factors(divide_factor_components)
-            return divide_factor(split_mutliply_factors)
+            unit_components, separators = split_string_with_separators(units)
+            return get_factors(unit_components, separators)
 
+        
         def get_SI_units(units):
             '''Convert the units to SI units'''
             # Split the units by either "/" or "."
-            split_units = re.split(r"([./])", units)
+            unit_components, separators = split_string_with_separators(units)
 
             # Loop over the split components and look up their conversion factors in the mapping
             converted_units = []
-            separators = []
-            for component in split_units:
+            for component in unit_components:
+                try:
+                    exponent = int(component)
+                    converted_units.append(str(exponent))
+                except ValueError:
+                    pass
                 if component in UNITS:
                     converted_units.append(UNITS[component])
-                elif component in ["/", "."]:
-                    separators.append(component)
+                else:
+                    logging.error(f"Unit {component} not found in UNITS dictionary")
+
+            while len(separators) < len(converted_units):
+                separators.append('')
 
             # Merge the converted units back into the original units with the separator that was used
             return "".join(
