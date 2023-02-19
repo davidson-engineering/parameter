@@ -174,7 +174,7 @@ def factor(data, factor):
     '''Factor data by a factor'''
     return [d * factor for d in data] if is_iterable(data) else data * factor
 
-def flatten_dict(d, parent_key='', sep='.'):
+def flatten_dict(d, parent_key='', sep='_'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + str(k) if parent_key else k
