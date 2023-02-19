@@ -157,7 +157,7 @@ class Parameters(dict):
         return Parameters({key: param.convert_to_SI() for key, param in self.items()})
 
     def as_values(self):
-        return Parameters({k: v["value"] for k, v in self.items()})
+        return Parameters({k: v.value for k, v in self.items()})
 
     def get_multi(self, inclusions):
         return {inc: self[inc] for inc in inclusions}
