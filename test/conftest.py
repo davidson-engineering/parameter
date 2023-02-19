@@ -14,4 +14,7 @@ def test_params():
         g=Parameter(1000, "rev/hour"),
         h=Parameter(0.1, "kg/mm^3"),
         i=Parameter(0.1, "kg/m^3"),
+        j=Parameter(0.1, "N.m"),
+        k=Parameter(0.1, "kN.m"),
+        l=Parameter(3, "N.mm"),
     )

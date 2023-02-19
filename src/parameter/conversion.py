@@ -15,6 +15,8 @@ TO_SI_FACTOR = {
     "min": 60,
     "rev": 2 * pi,
     "hour": 3600,
+    "N": 1,
+    "kN": 1e3,
 }
 
 TO_SI_UNITS = {
@@ -32,4 +34,6 @@ TO_SI_UNITS = {
     "min": "s",
     "rev": "rad",
     "hour": "s",
+    "N": "N",
+    "kN": "N",
 }

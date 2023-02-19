@@ -22,6 +22,10 @@ def test_parameter(test_params):
     assert test_params['h'].convert_to_SI().units == "kg/m^3"
     assert test_params['i'].convert_to_SI().value == 0.1
     assert test_params['i'].convert_to_SI().units == "kg/m^3"
+    assert test_params['k'].convert_to_SI().value == 100
+    assert test_params['k'].convert_to_SI().units == "N.m"
+    assert test_params['l'].convert_to_SI().value == 0.003
+    assert test_params['l'].convert_to_SI().units == "N.m"
 
 def test_build_from_yaml():
     parameters = Parameters(parse_yaml_to_parameters("test/input_file.yaml")["test_parameters"])

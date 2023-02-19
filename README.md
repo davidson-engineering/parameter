@@ -5,7 +5,7 @@
 - *Parameter* objects store original values and units.
 - *Parameter* objects can be read from a .yml file, or from a dictionary.
 - A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
-- Exponents (such as m^2) are supported
+- Operators multiply ('/'), divide ('.') and exponents('^') are supported.
 
 
 ```python
@@ -13,6 +13,9 @@
     p_length_small = Parameter(2, "mm")
     p_speed = Parameter([3,4,5], "mm/s")
     p_speed_slow = Parameter(3, "mm/min")
+    p_torque = Parameter(3, 'N.m')
+    p_torque_small = Parameter(3, 'N.mm')
+    p_torque_large = Parameter(3, 'kN.mm')
     p_angular_speed = Parameter(2, "deg/min")
     p_angular_speed_rpm = Parameter(100, "rev/min")
     p_angular_speed_rph = Parameter(1000, "rev/hour")
