@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
+import dataclasses
 from pathlib import Path
 import copy
 import re
@@ -162,6 +163,8 @@ class Parameters(dict):
         return {inc: self[inc] for inc in inclusions}
 
     def get_common(self, prefix: str):
+        if dataclasses.is_dataclass(self):
+            return {name: getattr(self, name) for name in self.__dataclass_fields__ if name.startswith(prefix)}
         return [self[name].value
             for name in self
             if name.startswith(prefix)] 
