@@ -5,6 +5,7 @@
 - *Parameter* objects store original values and units.
 - *Parameter* objects can be read from a .yml file, or from a dictionary.
 - A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
+- Exponents (such as m^2) are not currently supported
 
 
 ```python
