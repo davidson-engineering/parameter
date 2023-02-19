@@ -16,3 +16,22 @@
     param_g = Parameter(1000, "rev/hour")
 
 ```
+# Read parameters from .yaml file, and print a neat table
+```
+    from parameter.parameter import parse_yaml_to_parameters, Parameters
+
+    # Read in a .yaml file containing nested dictionaries of parameters
+    parameters_dict = parse_yaml_to_parameters("path/to/file.yaml")
+
+    # Select a set of parameters
+    parameters_set = parameters["subset_parameters"]
+
+    # Print out a neat table using PrettyTable
+    table = parameters_set.as_table()
+    print(table)
+
+    # Print out the parameters in SI units
+    table_SI = parameters_set.to_SI().as_table()
+    print(table_SI)
+
+```

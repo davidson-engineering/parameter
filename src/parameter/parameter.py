@@ -187,19 +187,13 @@ def flatten_dict(d, parent_key='', sep='.'):
 def dict_to_parameters(d, convert_to_si=False):
     '''Convert a dictionary to a Parameters object'''
     flattened_dict = flatten_dict(d)
-    parameters = {key: Parameter(*val) for key, val in flattened_dict.items()}
-    if convert_to_si:
-        parameters = {key: val.convert_to_SI() for key, val in parameters.items()}
-    return parameters
+    parameters = Parameters({key: Parameter(*val) for key, val in flattened_dict.items()})
+    return parameters.to_SI() if convert_to_si else parameters
 
 
-def dicts_to_parameters(dict_) -> dict | dict[dict]:
+def dicts_to_parameters(dict_, convert_to_si=False) -> dict | dict[dict]:
     '''Convert a dictionary of dictionaries to a dictionary of Parameters objects'''
-    params_dict = {}
-    for k, v in dict_.items():
-        flattened_dict = flatten_dict(v)
-        params_dict[k] = {kk: Parameter(*vv) for kk, vv in flattened_dict.items()}
-    return params_dict
+    return {k: dict_to_parameters(v, convert_to_si=convert_to_si) for k, v in dict_.items()}
 
 
 def parse_yaml_to_parameters(filepath: str | Path) -> dict | dict[dict]:
