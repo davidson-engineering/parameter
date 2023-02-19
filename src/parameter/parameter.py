@@ -155,6 +155,17 @@ class Parameters(dict):
     def to_SI(self):
         return Parameters({key: param.convert_to_SI() for key, param in self.items()})
 
+    def extract_values(self):
+        return {k: v["value"] for k, v in self.items()}
+
+    def get_multi(self, inclusions):
+        return {inc: self[inc] for inc in inclusions}
+
+    def get_common(self, prefix: str):
+        return [self[name].value
+            for name in self
+            if name.startswith(prefix)] 
+
 def tabulate_object_attrs(obj):
     table = PrettyTable()
     table.field_names = ["Property", "Value"]

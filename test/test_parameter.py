@@ -34,3 +34,8 @@ def test_build_from_yaml():
     print(table)
     table_SI = parameters.to_SI().as_table()
     print(table_SI)
+
+def test_common():
+    from parameter.parameter import parse_yaml_to_parameters, Parameters
+    parameters = Parameters(parse_yaml_to_parameters("test/input_file.yaml")["test_parameters"])
+    parameters.get_common("end_affector_cog")
