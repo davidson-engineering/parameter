@@ -44,3 +44,9 @@ def test_as_values():
     from parameter.parameter import parse_yaml_to_parameters, Parameters
     parameters = Parameters(parse_yaml_to_parameters("test/input_file.yaml")["test_parameters"])
     parameters.as_values()
+
+def test_group_by_prefix():
+    from parameter.parameter import parse_yaml_to_parameters, Parameters
+    parameters = Parameters(parse_yaml_to_parameters("test/input_file.yaml")["test_parameters"])
+    grouped = parameters.group_by_prefix()
+    print(grouped)

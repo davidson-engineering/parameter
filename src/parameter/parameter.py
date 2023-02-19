@@ -159,6 +159,24 @@ class Parameters(dict):
     def as_values(self):
         return Parameters({k: v.value for k, v in self.items()})
 
+    def as_values(self):
+        return Parameters({k: v.value for k, v in self.items()})
+
+    def group_by_prefix(self):
+        prefix_dict = {}
+        for key, value in self.items():
+            for prefix in prefix_dict:
+                if key.startswith(prefix) or prefix.startswith(key):
+                    prefix_dict[prefix].append(value)
+                    prefix_dict[key] = prefix_dict.pop(prefix)
+                    break
+            else:
+                prefix_dict[key] = [value]
+        for prefix, values in prefix_dict.items():
+            if len(values) == 1:
+                prefix_dict[prefix] = values[0]
+        return Parameters(prefix_dict)
+
     def get_multi(self, inclusions):
         return {inc: self[inc] for inc in inclusions}
 
