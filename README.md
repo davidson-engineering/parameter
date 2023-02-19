@@ -3,7 +3,8 @@
 
 - Creates *Parameter* objects, that can be converted to SI units for calculations.
 - *Parameter* objects store original values and units.
-- Objects can be read from a yaml file, or from a dictionary.
+- *Parameter* objects can be read from a .yml file, or from a dictionary.
+- A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
 
 
 ```
@@ -34,4 +35,19 @@
     table_SI = parameters_set.to_SI().as_table()
     print(table_SI)
 
+```
+
+```
+    @dataclass
+    class ParametersSubclass(Parameters):
+        param_a: Parameter
+        param_b: Parameter
+        param_c: Parameter
+
+
+     dict = {
+        param_a: Parameter(1, "m"),
+        param_b: Parameter(2, "mm"),
+        param_c: Parameter([3,4,5], "mm/s"),
+     }
 ```
