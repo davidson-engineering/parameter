@@ -24,10 +24,10 @@
 ```
 # Read parameters from .yaml file, and print a neat table
 ```python
-    from parameter.parameter import parse_yaml_to_parameters, Parameters
+    from parameter.parameter import read_parameters_from_yaml, Parameters
 
     # Read in a .yaml file containing nested dictionaries of parameters
-    parameters_dict = parse_yaml_to_parameters("path/to/file.yaml")
+    parameters_dict = read_parameters_from_yaml("path/to/file.yaml")
 
     # Select a set of parameters
     parameters_set = parameters["subset_parameters"]

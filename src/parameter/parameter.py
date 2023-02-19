@@ -243,7 +243,7 @@ def dicts_to_parameters(dict_, convert_to_si=False) -> dict | dict[dict]:
     return {k: dict_to_parameters(v, convert_to_si=convert_to_si) for k, v in dict_.items()}
 
 
-def parse_yaml_to_parameters(filepath: str | Path) -> dict | dict[dict]:
+def read_parameters_from_yaml(filepath: str | Path) -> dict | dict[dict]:
     '''Parse a yaml file to a Parameters object'''
     parameters_dict = read_yaml(filepath)
     return dicts_to_parameters(parameters_dict)
