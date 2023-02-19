@@ -36,10 +36,39 @@
     table = parameters_set.as_table()
     print(table)
 
+    +------------------------+-------+-------+
+    |        Property        | Value | Units |
+    +------------------------+-------+-------+
+    |      base_zheight      |   0   |   m   |
+    |      nacelle_mass      |  1500 |   g   |
+    |     nacelle_radius     |  150  |   mm  |
+    | arm_reference_angles_0 |   0   |  deg  |
+    | arm_reference_angles_1 |  120  |  deg  |
+    | arm_reference_angles_2 |  240  |  deg  |
+    |      distal_cogs       |  0.5  |   -   |
+    |   end_affector_cog_x   |   0   |   mm  |
+    |   end_affector_cog_y   |   0   |   mm  |
+    |   end_affector_cog_z   |   0   |   mm  |
+    +------------------------+-------+-------+
+
     # Print out the parameters in SI units
     table_SI = parameters_set.to_SI().as_table()
     print(table_SI)
 
+    +------------------------+-------+-------+
+    |        Property        | Value | Units |
+    +------------------------+-------+-------+
+    |      base_zheight      |   0   |   m   |
+    |      nacelle_mass      |  1.5  |   kg  |
+    |     nacelle_radius     |  0.15 |   m   |
+    | arm_reference_angles_0 |  0.0  |  rad  |
+    | arm_reference_angles_1 | 2.094 |  rad  |
+    | arm_reference_angles_2 | 4.189 |  rad  |
+    |      distal_cogs       |  0.5  |   -   |
+    |   end_affector_cog_x   |  0.0  |   m   |
+    |   end_affector_cog_y   |  0.0  |   m   |
+    |   end_affector_cog_z   |  0.0  |   m   |
+    +------------------------+-------+-------+
 ```
 
 ```python

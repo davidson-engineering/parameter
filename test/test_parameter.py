@@ -30,9 +30,10 @@ def test_parameter(test_params):
 def test_build_from_yaml():
     parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
     table = parameters.as_table()
-    print("")
+    print("Parameters in original units:")
     print(table)
     table_SI = parameters.to_SI().as_table()
+    print("Parameters in SI units:")
     print(table_SI)
 
 def test_common():
