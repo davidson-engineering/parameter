@@ -5,9 +5,12 @@
 - *Parameter* objects store original values and units.
 - *Parameter* objects can be read from a YAML file, or from a dictionary.
 - A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
-- Operators multiply ('/'), divide ('.') and exponents('^') are supported.
+- Operators such as add, multiply, divide and exponent are supported:
+    - Between Parameter objects, and other types of objects that also support these methods.
+    - Also on units, such as rad/s, kg/m^2
 
-## Example Usage
+## Simple Example Usage
+Some mixed units
 ```python
 p_length_large = Parameter(1, "m")
 p_length_small = Parameter(2, "mm")
@@ -23,7 +26,8 @@ p_moment_inertia = Parameter(0.1, "kg/m^2")
 
 ```
 
-## Read a set of several parameters from YAML file, and select a subset
+## Read Parameters from YAML
+Read a set of several parameters from YAML file, and select a subset
 ```python
 from parameter.parameter import read_parameters_from_yaml, Parameters
 
@@ -35,7 +39,8 @@ parameters_set = parameters["subset_parameters"]
 
 ```
 
-## Print out a neat table, in both original and SI units
+## Print out a neat table
+In both original and SI units
 ```python
 # Print out a neat table using PrettyTable
 table = parameters_set.table
@@ -79,6 +84,7 @@ print(table_SI)
 ```
 
 ## Parameters class can be subclassed by a dataclass
+Allows for easy creation of Parameter type objects with mandatory arguments
 ```python
 @dataclass
 class ParametersSubclass(Parameters):
@@ -99,7 +105,6 @@ params_subclass_object_si = params_subclass_object.si_units
 
 ## Parameters with common names can be grouped together with their values in one list
 Use the '__*' suffix when specifying a parameter name, where '*' can be any character(s) of your choice.
-
 ```python
 parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
 parameters.table
@@ -131,4 +136,28 @@ parameters.grouped.table
 |    nacelle_radius    |      150      |   mm  |
 |     distal_cogs      |      0.5      |   -   |
 +----------------------+---------------+-------+
+```
+
+### Operators are supported as well
+```python
+p_a = Parameter(1, "m")
+p_b = Parameter(25, "mm")
+assert p_a + p_b == Parameter(1.025, "m")
+assert p_a - p_b == Parameter(0.975, "m")
+assert p_a * p_b == Parameter(0.025, "m") # TODO: this should be m^2
+assert p_a / p_b == Parameter(40, "m")
+assert p_a + p_b == param_b + param_a
+
+p_c = Parameter(300, "mm")
+p_d = Parameter(40, "m")
+assert p_d > p_c
+assert p_c < p_d
+
+p_e = Parameter(12, 'ft')
+assert p_e + p_a != Parameter(13, 'ft')
+assert p_e + p_a == Parameter(4.6576, 'm')
+
+p_f = Parameter(3.6576, 'mm^3')
+p_g = Parameter(3.6576E-9, 'm^3')
+assert p_f == p_g # Note small allowance for error of 1E-10
 ```

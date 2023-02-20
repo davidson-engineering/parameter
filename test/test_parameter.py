@@ -70,7 +70,7 @@ def test_dataclass_inheritance():
     parent_object = SomeDataClass(**test_params)
     print(parent_object.values_only.table)
 
-def test_imperial_units(test_params):
+def test_imperial_units():
     param_a = Parameter(1, "lbf")
     param_b = Parameter(4.4482216152605, "N")
     assert param_a == param_b
@@ -82,3 +82,25 @@ def test_imperial_units(test_params):
     param_a = Parameter(1/0.45359237, "lb")
     param_b = Parameter(1/14.5939029372064, "slug")
     assert param_a == param_b
+
+def test_operators():
+    param_a = Parameter(1, "m")
+    param_b = Parameter(25, "mm")
+    param_c = Parameter(300, "mm")
+    param_d = Parameter(40, "m")
+    param_e = Parameter(12, 'ft')
+    param_f = Parameter(3.6576, 'mm^3')
+    param_g = Parameter(3.6576E-9, 'm^3')
+
+    assert param_d > param_c
+    assert param_c < param_d
+    assert param_a + param_b == Parameter(1.025, "m")
+    assert param_a - param_b == Parameter(0.975, "m")
+    assert param_a * param_b == Parameter(0.025, "m") # TODO: this should be m^2
+    assert param_a / param_b == Parameter(40, "m")
+    assert param_a + param_b == param_b + param_a
+    assert param_e < param_d
+    assert param_e > param_a
+    assert param_e + param_a != Parameter(13, 'ft')
+    assert param_e + param_a == Parameter(4.6576, 'm')
+    assert param_f == param_g

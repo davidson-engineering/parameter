@@ -13,12 +13,14 @@ import re
 import itertools
 from collections.abc import Iterable
 from yaml import safe_load
+import operator
 
 from prettytable import PrettyTable
 import parameter.conversion as convert
 
 FACTORS = convert.TO_SI_FACTOR
 UNITS = convert.TO_SI_UNITS
+EPS = 1e-10
 
 def is_iterable(element):
     '''Check if an element is iterable'''
@@ -55,7 +57,58 @@ class Parameter:
     def __eq__(self, other):
         self_si = self.si_units
         other_si = other.si_units
-        return isinstance(other, Parameter) and self_si.value == other_si.value and self_si.units == other_si.units
+        return isinstance(other, Parameter) and (self_si.value - other_si.value) < EPS and self_si.units == other_si.units
+
+    def __ne__(self, other):
+        return not self == other
+    
+    def _apply_operator(self, other, op_func):
+        self_si, other_si = self.si_units, other.si_units
+        if self_si.units != other_si.units:
+            raise ValueError("Cannot operate on parameters with different units.")
+        value = op_func(self_si.value, other_si.value if isinstance(other, Parameter) else other)
+        return Parameter(value, self_si.units)
+
+    def __add__(self, other):
+        return self._apply_operator(other, operator.add)
+
+    def __sub__(self, other):
+        return self._apply_operator(other, operator.sub)
+
+    def __mul__(self, other):
+        return self._apply_operator(other, operator.mul)
+
+    def __truediv__(self, other):
+        return self._apply_operator(other, operator.truediv)
+
+    def __floordiv__(self, other):
+        return self._apply_operator(other, operator.floordiv)
+    
+    def __mod__(self, other):
+        return self._apply_operator(other, operator.mod)
+    
+    def __pow__(self, other):
+        return self._apply_operator(other, operator.pow)
+
+    def __gt__(self, other):
+        return self._apply_operator(other, operator.gt)
+    
+    def __ge__(self, other):
+        return self._apply_operator(other, operator.ge)
+    
+    def __lt__(self, other):
+        return self._apply_operator(other, operator.lt)
+    
+    def __le__(self, other):
+        return self._apply_operator(other, operator.le)
+    
+    def __abs__(self):
+        return Parameter(abs(self.value), self.units)
+    
+    def __neg__(self):
+        return Parameter(-self.value, self.units)
+    
+
 
     @property
     def si_units(self):
@@ -87,7 +140,6 @@ class Parameter:
             parts = re.split(sep_pattern, s)
             # Use re.findall to find all occurrences of the separator pattern in the original string
             seps = re.findall(sep_pattern, s)
-
             return parts, seps
 
 
@@ -120,17 +172,19 @@ class Parameter:
             '''Convert the units to SI units'''
             # Split the units by either "/" or "."
             unit_components, separators = split_string_with_separators(units)
+            separators = [''] + separators
 
             # Loop over the split components and look up their conversion factors in the mapping
             converted_units = []
-            for component in unit_components:
-                try:
-                    exponent = int(component)
-                    converted_units.append(str(exponent))
-                except ValueError:
-                    pass
+            for component, separator in itertools.zip_longest(unit_components, separators):
                 if component in UNITS:
                     converted_units.append(UNITS[component])
+                if separator == '^':
+                    try:
+                        exponent = int(component)
+                        converted_units.append(str(exponent))
+                    except ValueError:
+                        raise ValueError(f"Exponent {component} is not an integer")
                 else:
                     logging.error(f"Unit {component} not found in UNITS dictionary")
 
@@ -141,7 +195,7 @@ class Parameter:
             return "".join(
                 [
                     val
-                    for pair in itertools.zip_longest(converted_units, separators)
+                    for pair in itertools.zip_longest(converted_units, separators[1:])
                     for val in pair
                     if val is not None
                 ]
