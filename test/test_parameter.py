@@ -69,3 +69,16 @@ def test_dataclass_inheritance():
 
     parent_object = SomeDataClass(**test_params)
     print(parent_object.values_only.table)
+
+def test_imperial_units(test_params):
+    param_a = Parameter(1, "lbf")
+    param_b = Parameter(4.4482216152605, "N")
+    assert param_a == param_b
+
+    param_a = Parameter(1/4.4482216152605, "lbf")
+    param_b = Parameter(1, "N")
+    assert param_a == param_b
+
+    param_a = Parameter(1/0.45359237, "lb")
+    param_b = Parameter(1/14.5939029372064, "slug")
+    assert param_a == param_b

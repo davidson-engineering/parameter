@@ -52,6 +52,11 @@ class Parameter:
     def __repr__(self):
         return f"{self.value}{self.units}"
 
+    def __eq__(self, other):
+        self_si = self.si_units
+        other_si = other.si_units
+        return isinstance(other, Parameter) and self_si.value == other_si.value and self_si.units == other_si.units
+
     @property
     def si_units(self):
         """

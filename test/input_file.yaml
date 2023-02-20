@@ -9,6 +9,6 @@ test_parameters:
     2: [240, deg]
   distal_cogs: [0.5, -]
   end_affector_cog: 
-    x: [0, mm]
-    y: [0, mm]
+    x: [50, mm]
+    y: [-1, mm]
     z: [0, mm]
