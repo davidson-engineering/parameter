@@ -34,6 +34,8 @@ pip install -e .
 ## Simple Example Usage
 Some mixed units
 ```python
+from parameter.parameter import Parameter
+
 p_length_large = Parameter(1, "m")
 p_length_small = Parameter(2, "mm")
 p_speed = Parameter([3,4,5], "mm/s")
@@ -65,7 +67,7 @@ parameters_set = parameters["subset_parameters"]
 In both original and SI units
 ```python
 # Print out a neat table using PrettyTable
-table = parameters_set.table
+table = parameters.table
 print(table)
 +-------------------------+-------+-------+
 |        Parameter        | Value | Units |
@@ -84,7 +86,7 @@ print(table)
 +-------------------------+-------+-------+
 
 # Print out the parameters in SI units
-table_SI = parameters_set.si_units.table
+table_SI = parameters.si_units.table
 print(table_SI)
 +-------------------------+--------+-------+
 |        Parameter        | Value  | Units |
@@ -106,6 +108,8 @@ print(table_SI)
 ## Parameters class can be subclassed by a dataclass
 Allows for easy creation of Parameter type objects with mandatory arguments
 ```python
+from parameter.parameter import Parameter, Parameters
+
 @dataclass
 class ParametersSubclass(Parameters):
     param_a: Parameter
@@ -137,6 +141,8 @@ print(params_subclass_object_si.table)
 Use the '__\*' suffix when specifying a grouped parameter name, where '\*' can be any character(s) of your choice.
 Calling the .grouped property on a Parameters object will return a Parameters object, with all the values combined into a single list. Units will be common.
 ```python
+from parameter.parameter import read_parameters_from_yaml, Parameters
+
 parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
 
 print(parameters.table)
@@ -172,6 +178,8 @@ print(parameters.grouped.table)
 
 ### Operators are supported as well
 ```python
+from parameter.parameter import Parameter
+
 p_a = Parameter(1, "m")
 p_b = Parameter(25, "mm")
 assert p_a + p_b == Parameter(1.025, "m")
