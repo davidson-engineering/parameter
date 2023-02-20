@@ -8,7 +8,7 @@
 - Operators such as add, multiply, divide and exponent are supported:
     - Between Parameter objects, and other types of objects that also support these methods.
     - Also on units, such as rad/s, kg/m^2
-
+- See [parameter.conversion.py](src/parameter/conversion.py) for a full list of all possible conversions. Custom conversions are easily added.
 ## Simple Example Usage
 Some mixed units
 ```python
@@ -113,8 +113,9 @@ print(params_subclass_object_si.table)
 +-----------+-----------------------+-------+
 ```
 
-## Parameters with common names can be grouped together with their values in one list
-Use the '__*' suffix when specifying a parameter name, where '*' can be any character(s) of your choice.
+## Parameters with common names can be grouped together
+Use the '__\*' suffix when specifying a grouped parameter name, where '\*' can be any character(s) of your choice.
+Calling the .grouped property on a Parameters object will return a Parameters object, with all the values combined into a single list. Units will be common.
 ```python
 parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
 parameters.table
@@ -169,5 +170,11 @@ assert p_e + p_a == Parameter(4.6576, 'm')
 
 p_f = Parameter(3.6576, 'mm^3')
 p_g = Parameter(3.6576E-9, 'm^3')
-assert p_f == p_g # Note small allowance for error of 1E-10
+assert p_f == p_g # Note small allowance for error of 1E-10 (configurable)
+
+# If operator is applied to an int,
+# then Parameter will not be converted to SI automatically
+p_h = Parameter(36.487, 'MPa')
+assert p_h // 10 == 3
+assert p_h.si_units // 1E6 == p_h / 10
 ```

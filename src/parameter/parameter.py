@@ -55,17 +55,26 @@ class Parameter:
         return f"{self.value}{self.units}"
 
     def __eq__(self, other):
-        self_si = self.si_units
-        other_si = other.si_units
-        return isinstance(other, Parameter) and (self_si.value - other_si.value) < EPS and self_si.units == other_si.units
+        try:
+            self_si, other_si = self.si_units, other.si_units
+        except AttributeError:
+            self_si = self.si_units
+            other_si = Parameter(other, self_si.units)
+        return (self_si.value - other_si.value) < EPS and self_si.units == other_si.units
 
     def __ne__(self, other):
         return not self == other
     
     def _apply_operator(self, other, op_func):
-        self_si, other_si = self.si_units, other.si_units
-        if self_si.units != other_si.units:
-            raise ValueError("Cannot operate on parameters with different units.")
+        if isinstance(other, int):
+            return Parameter(op_func(self.value, other), self.units)
+        try:
+            self_si, other_si = self.si_units, other.si_units
+            if self_si.units != other_si.units:
+                raise ValueError("Cannot operate on parameters with different units.")
+        except AttributeError:
+            self_si = self.si_units
+            other_si = Parameter(other, self_si.units)
         value = op_func(self_si.value, other_si.value if isinstance(other, Parameter) else other)
         return Parameter(value, self_si.units)
 

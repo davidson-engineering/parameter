@@ -85,23 +85,28 @@ def test_imperial_units():
     assert param_a == param_b
 
 def test_operators():
-    param_a = Parameter(1, "m")
-    param_b = Parameter(25, "mm")
-    param_c = Parameter(300, "mm")
-    param_d = Parameter(40, "m")
-    param_e = Parameter(12, 'ft')
-    param_f = Parameter(3.6576, 'mm^3')
-    param_g = Parameter(3.6576E-9, 'm^3')
+    p_a = Parameter(1, "m")
+    p_b = Parameter(25, "mm")
+    p_c = Parameter(300, "mm")
+    p_d = Parameter(40, "m")
+    p_e = Parameter(12, 'ft')
+    p_f = Parameter(3.6576, 'mm^3')
+    p_g = Parameter(3.6576E-9, 'm^3')
+    p_h = Parameter(36.487, 'MPa')
 
-    assert param_d > param_c
-    assert param_c < param_d
-    assert param_a + param_b == Parameter(1.025, "m")
-    assert param_a - param_b == Parameter(0.975, "m")
-    assert param_a * param_b == Parameter(0.025, "m") # TODO: this should be m^2
-    assert param_a / param_b == Parameter(40, "m")
-    assert param_a + param_b == param_b + param_a
-    assert param_e < param_d
-    assert param_e > param_a
-    assert param_e + param_a != Parameter(13, 'ft')
-    assert param_e + param_a == Parameter(4.6576, 'm')
-    assert param_f == param_g
+    assert p_d > p_c
+    assert p_c < p_d
+    assert p_a + p_b == Parameter(1.025, "m")
+    assert p_a - p_b == Parameter(0.975, "m")
+    assert p_a * p_b == Parameter(0.025, "m") # TODO: this should be m^2
+    assert p_a / p_b == Parameter(40, "m")
+    assert p_a + p_b == p_b + p_a
+    assert p_e < p_d
+    assert p_e > p_a
+    assert p_e + p_a != Parameter(13, 'ft')
+    assert p_e + p_a == Parameter(4.6576, 'm')
+    assert p_f == p_g
+    assert p_f // 1 == 3
+    assert p_f.si_units // 1 == 0
+    assert p_h // 10 == 3
+    assert p_h.si_units // 1E6 == p_h / 10
