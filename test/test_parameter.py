@@ -1,4 +1,4 @@
-from parameter.parameter import read_parameters_from_yaml, Parameters
+from parameter.parameter import read_parameters_from_yaml, Parameters, Parameter
 
 def test_parameter(test_params):
 
@@ -51,3 +51,21 @@ def test_group_by_prefix():
     print(grouped.table)
     print(grouped.si_units.table)
     print(grouped.si_units.values_only)
+
+def test_dataclass_inheritance():
+    from dataclasses import dataclass
+
+    @dataclass
+    class SomeDataClass(Parameters):
+        a: Parameter
+        b: Parameter
+        c: Parameter
+
+    test_params = dict(
+        a=Parameter(1, "m"),
+        b=Parameter(2, "mm"),
+        c=Parameter(3, "mm/s"),
+    )
+
+    parent_object = SomeDataClass(**test_params)
+    print(parent_object.values_only.table)

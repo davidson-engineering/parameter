@@ -156,19 +156,44 @@ class Parameters(dict):
     '''
     @property
     def table(self):
+        # table = PrettyTable()
+        # table.field_names = ["Parameter", "Value", "Units"]
+        # for key, value in self.items():
+        #     try:
+        #         value = value.value
+        #     except KeyError:
+        #         pass
+        #     try:
+        #         cell_value = round(value.value, 3)
+        #     except TypeError:
+        #         try:
+        #             cell_value = [round(v,3) for v in value.value]
+        #         except TypeError:
+        #             cell_value = value.value
+
+        #     table.add_row([key, cell_value, value.units])
+        # return table
         table = PrettyTable()
         table.field_names = ["Parameter", "Value", "Units"]
+        
         for key, value in self.items():
-            try:
-                cell_value = round(value.value, 3)
-            except TypeError:
+            if isinstance(value, Parameter):
                 try:
-                    cell_value = [round(v,3) for v in value.value]
+                    cell_value = round(value.value, 3)
                 except TypeError:
                     cell_value = value.value
-
-            table.add_row([key, cell_value, value.units])
+                cell_units = value.units
+            elif isinstance(value, list):
+                cell_value = [round(v, 3) for v in value]
+                cell_units = '-'
+            else:
+                cell_value = value
+                cell_units = '-'
+            
+            table.add_row([key, cell_value, cell_units])
+            
         return table
+
 
     @property
     def si_units(self):
@@ -176,7 +201,10 @@ class Parameters(dict):
     
     @property
     def values_only(self):
-        return Parameters({k: v.value for k, v in self.items()})
+        '''
+        Return a dictionary of values in SI units only
+        '''
+        return Parameters({k: v.value for k, v in self.si_units.items()})
 
     @property
     def grouped(self):
@@ -207,8 +235,6 @@ class Parameters(dict):
 
 
         return Parameters(**grouped_dict)
-
-        
     
     def get_multi(self, inclusions):
         return {inc: self[inc] for inc in inclusions}
@@ -219,9 +245,15 @@ class Parameters(dict):
         '''
         if dataclasses.is_dataclass(self):
             return {name: getattr(self, name) for name in self.__dataclass_fields__ if name.startswith(prefix)}
-        return [self[name].value
-            for name in self
-            if name.startswith(prefix)]
+        return [v.value
+            for k,v in self.items()
+            if k.startswith(prefix)]
+
+    def items(self):
+        if dataclasses.is_dataclass(self):
+            return [(name, getattr(self, name)) for name in self.__dataclass_fields__]
+        else:
+            return [(key, self[key]) for key in self]
 
 def tabulate_object_attrs(obj):
     '''

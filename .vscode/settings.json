@@ -5,4 +5,8 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    // "autoDocstring.docstringFormat": "sphinx",
+    // "autoDocstring.generateDocstringOnEnter": true,
+    // "autoDocstring.includeExtendedSummary": true,
+    // "autoDocstring.guessTypes": true,
 }
