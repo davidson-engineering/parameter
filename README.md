@@ -10,6 +10,28 @@
     - Also on units, such as rad/s, kg/m^2.
     - Note: exponents are not supported (yet) for unit outputs
 - See [parameter.conversion.py](src/parameter/conversion.py) for a full list of all possible conversions. Custom conversions are easily added.
+
+## Installation
+Install as module straight from github using pip
+```console
+~$ pip install 'parameter @ git+https://github.com/davidson-engineering/parameter.git'
+```
+Install specific version using pip
+```console
+~$ pip install 'parameter @ git+https://github.com/davidson-engineering/parameter.git@v0.1.0'
+```
+
+For development, clone from github to folder, make .venv and install using pip
+```console
+~$ git clone https://github.com/davidson-engineering/parameter.git
+~$ cd parameter
+~$ python -m .venv .venv
+~$ .venv/Scripts/activate.ps1 # If using powershell
+~$ source .venv/bin/activate # If using Unix / MacOS
+~$ pip install -e .
+
+```
+
 ## Simple Example Usage
 Some mixed units
 ```python
