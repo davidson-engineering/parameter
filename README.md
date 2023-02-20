@@ -32,7 +32,7 @@ Read a set of several parameters from YAML file, and select a subset
 ```python
 from parameter.parameter import read_parameters_from_yaml, Parameters
 
-    # Read in a YAML file containing nested dictionaries of parameters
+# Read in a YAML file containing nested dictionaries of parameters
 parameters_dict = read_parameters_from_yaml("path/to/file.yaml")
 
 # Select a set of parameters
@@ -46,7 +46,6 @@ In both original and SI units
 # Print out a neat table using PrettyTable
 table = parameters_set.table
 print(table)
-
 +-------------------------+-------+-------+
 |        Parameter        | Value | Units |
 +-------------------------+-------+-------+
@@ -66,7 +65,6 @@ print(table)
 # Print out the parameters in SI units
 table_SI = parameters_set.si_units.table
 print(table_SI)
-
 +-------------------------+--------+-------+
 |        Parameter        | Value  | Units |
 +-------------------------+--------+-------+
@@ -102,8 +100,8 @@ param_dict = {
 
 params_subclass_object = ParametersSubclass(**param_dict)
 
-params_subclass_object = ParameterSubclass(**param_dict)
 params_subclass_object_si = params_subclass_object.si_units
+
 print(params_subclass_object_si.table)
 +-----------+-----------------------+-------+
 | Parameter |         Value         | Units |
@@ -119,8 +117,8 @@ Use the '__\*' suffix when specifying a grouped parameter name, where '\*' can b
 Calling the .grouped property on a Parameters object will return a Parameters object, with all the values combined into a single list. Units will be common.
 ```python
 parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
-parameters.table
 
+print(parameters.table)
 +-------------------------+-------+-------+
 |        Parameter        | Value | Units |
 +-------------------------+-------+-------+
@@ -136,7 +134,8 @@ parameters.table
 |   end_affector_cog__y   |   -1  |   mm  |
 |   end_affector_cog__z   |   0   |   mm  |
 +-------------------------+-------+-------+
-parameters.grouped.table
+
+print(parameters.grouped.table)
 +----------------------+---------------+-------+
 |      Parameter       |     Value     | Units |
 +----------------------+---------------+-------+
