@@ -56,19 +56,20 @@ def test_dataclass_inheritance():
     from dataclasses import dataclass
 
     @dataclass
-    class SomeDataClass(Parameters):
-        a: Parameter
-        b: Parameter
-        c: Parameter
+    class ParametersSubclass(Parameters):
+        param_a: Parameter
+        param_b: Parameter
+        param_c: Parameter
 
-    test_params = dict(
-        a=Parameter(1, "m"),
-        b=Parameter(2, "mm"),
-        c=Parameter(3, "mm/s"),
-    )
+    param_dict = {
+        'param_a': Parameter(1, "m"),
+        'param_b': Parameter(2, "mm"),
+        'param_c': Parameter([3,4,5], "mm/s"),
+    }
 
-    parent_object = SomeDataClass(**test_params)
-    print(parent_object.values_only.table)
+    params_subclass_object = ParametersSubclass(**param_dict)
+    params_subclass_object_si = params_subclass_object.si_units
+    print(params_subclass_object_si.table)
 
 def test_imperial_units():
     param_a = Parameter(1, "lbf")

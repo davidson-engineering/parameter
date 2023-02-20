@@ -93,14 +93,24 @@ class ParametersSubclass(Parameters):
     param_c: Parameter
 
 
-    param_dict = {
-    param_a: Parameter(1, "m"),
-    param_b: Parameter(2, "mm"),
-    param_c: Parameter([3,4,5], "mm/s"),
-    }
+param_dict = {
+    'param_a': Parameter(1, "m"),
+    'param_b': Parameter(2, "mm"),
+    'param_c': Parameter([3,4,5], "mm/s"),
+}
+
+params_subclass_object = ParametersSubclass(**param_dict)
 
 params_subclass_object = ParameterSubclass(**param_dict)
 params_subclass_object_si = params_subclass_object.si_units
+print(params_subclass_object_si.table)
++-----------+-----------------------+-------+
+| Parameter |         Value         | Units |
++-----------+-----------------------+-------+
+|  param_a  |           1           |   m   |
+|  param_b  |         0.002         |   m   |
+|  param_c  | [0.003, 0.004, 0.005] |  m/s  |
++-----------+-----------------------+-------+
 ```
 
 ## Parameters with common names can be grouped together with their values in one list
