@@ -38,7 +38,7 @@
 ## Print out a neat table
 ```python
     # Print out a neat table using PrettyTable
-    table = parameters_set.as_table()
+    table = parameters_set.table
     print(table)
 
     +------------------------+-------+-------+
@@ -57,7 +57,7 @@
     +------------------------+-------+-------+
 
     # Print out the parameters in SI units
-    table_SI = parameters_set.to_SI().as_table()
+    table_SI = parameters_set.si_units.table
     print(table_SI)
 
     +------------------------+-------+-------+
@@ -76,7 +76,7 @@
     +------------------------+-------+-------+
 ```
 
-## Paramters class can be subclassed by a dataclass
+## Parameters class can be subclassed by a dataclass
 ```python
     @dataclass
     class ParametersSubclass(Parameters):
@@ -92,5 +92,5 @@
      }
 
     params_subclass_object = ParameterSubclass(**param_dict)
-    params_subclass_object_si = params_subclass_object.to_SI()
+    params_subclass_object_si = params_subclass_object.si_units
 ```

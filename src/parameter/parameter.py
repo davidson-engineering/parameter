@@ -54,7 +54,8 @@ class Parameter:
     def __repr__(self):
         return f"{self.value}{self.units}"
 
-    def convert_to_SI(self):
+    @property
+    def si_units(self):
         """
         Convert to SI units.
 
@@ -73,20 +74,17 @@ class Parameter:
         Notes
         -----
         """
-        param_new = copy.deepcopy(self)
 
-
-        def split_string_with_separators(s):
+        def split_string_with_separators(s: str):
+            '''
+            Split a string into a list of parts, and a list of separators
+            '''
             # Define a regular expression to match separators
             sep_pattern = r'[/.^]'
-
-            # Use re.split to split the string on the separator pattern
             parts = re.split(sep_pattern, s)
-
             # Use re.findall to find all occurrences of the separator pattern in the original string
             seps = re.findall(sep_pattern, s)
 
-            # Return the parts and separators as a tuple
             return parts, seps
 
 
@@ -94,10 +92,10 @@ class Parameter:
             return [i for i, s in enumerate(string_list) if char in s]
 
 
-        def get_factors(unit_components, separators):
-            '''
-            Get the conversion factors for the units
-            '''
+
+        def get_SI_factor(units):
+            '''Convert the units to SI units'''
+            unit_components, separators = split_string_with_separators(units)
 
             if len(separators) == 0:
                 return FACTORS[unit_components[0]]
@@ -112,13 +110,7 @@ class Parameter:
             divide_factors = [FACTORS[unit_components[idx]] / FACTORS[unit_components[idx+1]] for idx in divide_idxs]
             
             product = lambda x: x[0] * product(x[1:]) if x else 1
-            return product(power_factors + multiply_factors + divide_factors)
-
-
-        def get_SI_factor(units):
-            '''Convert the units to SI units'''
-            unit_components, separators = split_string_with_separators(units)
-            return get_factors(unit_components, separators)
+            return product(power_factors + multiply_factors + divide_factors)            
 
         
         def get_SI_units(units):
@@ -152,6 +144,7 @@ class Parameter:
                 ]
             )
 
+        param_new = copy.deepcopy(self)
         param_new.value = factor(self.value, get_SI_factor(self.units))
         param_new.units = get_SI_units(self.units)
         return param_new
@@ -161,48 +154,79 @@ class Parameters(dict):
     '''
     Parameters class
     '''
-    def as_table(self):
+    @property
+    def table(self):
         table = PrettyTable()
-        table.field_names = ["Property", "Value", "Units"]
+        table.field_names = ["Parameter", "Value", "Units"]
         for key, value in self.items():
-            table.add_row([key, round(value.value, 3), value.units])
+            try:
+                cell_value = round(value.value, 3)
+            except TypeError:
+                try:
+                    cell_value = [round(v,3) for v in value.value]
+                except TypeError:
+                    cell_value = value.value
+
+            table.add_row([key, cell_value, value.units])
         return table
 
-    def to_SI(self):
-        return Parameters({key: param.convert_to_SI() for key, param in self.items()})
-
-    def as_values(self):
+    @property
+    def si_units(self):
+        return Parameters({key: param.si_units for key, param in self.items()})
+    
+    @property
+    def values_only(self):
         return Parameters({k: v.value for k, v in self.items()})
 
-    def as_values(self):
-        return Parameters({k: v.value for k, v in self.items()})
+    @property
+    def grouped_by_prefix(self):
+        '''
+        Group parameters by prefix
+        '''
+        strings = list(self)
+        groups = {}
+        regex = r"(\w+)-\w+"
+        matches = [re.search(regex, string) for string in strings]
+        matched_keys = [match.string for match in matches if match is not None]
+        groups = [match.group(1) for match in matches if match is not None]
 
-    def group_by_prefix(self):
-        prefix_dict = {}
+        grouped_dict = {}
+
+        for group in groups:
+
+            group_units = {self[key].units for key in self if key.startswith(group)}
+            if len(group_units) > 1:
+                logging.error('Units for parameter %s are not consistent, cannot continue safely", group')
+                raise ValueError(f"Units for {group} are not consistent")
+
+            grouped_dict[group] = Parameter(self.get_common(group), group_units.pop())
+
         for key, value in self.items():
-            for prefix in prefix_dict:
-                if key.startswith(prefix) or prefix.startswith(key):
-                    prefix_dict[prefix].append(value)
-                    prefix_dict[key] = prefix_dict.pop(prefix)
-                    break
-            else:
-                prefix_dict[key] = [value]
-        for prefix, values in prefix_dict.items():
-            if len(values) == 1:
-                prefix_dict[prefix] = values[0]
-        return Parameters(prefix_dict)
+            if key not in matched_keys:
+                grouped_dict[key] = value
 
+
+        return Parameters(**grouped_dict)
+
+        
+    
     def get_multi(self, inclusions):
         return {inc: self[inc] for inc in inclusions}
 
     def get_common(self, prefix: str):
+        '''
+        Get the common value for a parameter
+        '''
         if dataclasses.is_dataclass(self):
             return {name: getattr(self, name) for name in self.__dataclass_fields__ if name.startswith(prefix)}
         return [self[name].value
             for name in self
-            if name.startswith(prefix)] 
+            if name.startswith(prefix)]
 
 def tabulate_object_attrs(obj):
+    '''
+    Tabulate the attributes of an object
+    '''
     table = PrettyTable()
     table.field_names = ["Property", "Value"]
 
@@ -221,7 +245,7 @@ def factor(data, factor):
     '''Factor data by a factor'''
     return [d * factor for d in data] if is_iterable(data) else data * factor
 
-def flatten_dict(d, parent_key='', sep='_'):
+def flatten_dict(d, parent_key='', sep='-'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + str(k) if parent_key else k

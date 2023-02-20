@@ -1,4 +1,5 @@
 test_parameters:
+  singlename: [1, m]
   base_zheight: [0, m]
   nacelle_mass: [1500, g]
   nacelle_radius: [150, mm]
