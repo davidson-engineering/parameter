@@ -109,4 +109,4 @@ def test_operators():
     assert p_f // 1 == 3
     assert p_f.si_units // 1 == 0
     assert p_h // 10 == 3
-    assert p_h.si_units // 1E6 == p_h / 10
+    assert p_h.si_units // 1E6 == p_h // 1

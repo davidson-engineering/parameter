@@ -55,6 +55,8 @@ class Parameter:
         return f"{self.value}{self.units}"
 
     def __eq__(self, other):
+        if isinstance(other, (int, float)):
+            return (self.value - other) < EPS
         try:
             self_si, other_si = self.si_units, other.si_units
         except AttributeError:
@@ -66,7 +68,7 @@ class Parameter:
         return not self == other
     
     def _apply_operator(self, other, op_func):
-        if isinstance(other, int):
+        if isinstance(other, (int, float)):
             return Parameter(op_func(self.value, other), self.units)
         try:
             self_si, other_si = self.si_units, other.si_units
@@ -116,6 +118,9 @@ class Parameter:
     
     def __neg__(self):
         return Parameter(-self.value, self.units)
+
+    def __float__(self):
+        return float(self.value)
     
 
 

@@ -7,7 +7,8 @@
 - A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
 - Operators such as add, multiply, divide and exponent are supported:
     - Between Parameter objects, and other types of objects that also support these methods.
-    - Also on units, such as rad/s, kg/m^2
+    - Also on units, such as rad/s, kg/m^2.
+    - Note: exponents are not supported (yet) for unit outputs
 - See [parameter.conversion.py](src/parameter/conversion.py) for a full list of all possible conversions. Custom conversions are easily added.
 ## Simple Example Usage
 Some mixed units
@@ -176,5 +177,5 @@ assert p_f == p_g # Note small allowance for error of 1E-10 (configurable)
 # then Parameter will not be converted to SI automatically
 p_h = Parameter(36.487, 'MPa')
 assert p_h // 10 == 3
-assert p_h.si_units // 1E6 == p_h / 10
+assert p_h.si_units // 1E6 == p_h // 1
 ```
