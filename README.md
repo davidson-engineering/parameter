@@ -12,16 +12,16 @@
 - See [parameter.conversion.py](src/parameter/conversion.py) for a full list of all possible conversions. Custom conversions are easily added.
 
 ## Installation
-Install as module straight from github using pip
+Option 1: Install as module straight from github using pip
 ```console
+# Install latest version of module
 pip install 'parameter @ git+https://github.com/davidson-engineering/parameter.git'
-```
-Install specific version using pip
-```console
+
+# Alternatively, one can force a specific version to be installed
 pip install 'parameter @ git+https://github.com/davidson-engineering/parameter.git@v0.1.0'
 ```
 
-For development, clone from github to folder, make .venv and install using pip
+Option 2: For development, clone from github to folder, make .venv and install using pip
 ```console
 git clone https://github.com/davidson-engineering/parameter.git
 cd parameter
