@@ -185,7 +185,7 @@ class Parameters(dict):
         '''
         strings = list(self)
         groups = {}
-        regex = r"(\w+)-\w+"
+        regex = r"(\w+)__\w+"
         matches = [re.search(regex, string) for string in strings]
         matched_keys = [match.string for match in matches if match is not None]
         groups = [match.group(1) for match in matches if match is not None]
@@ -245,7 +245,7 @@ def factor(data, factor):
     '''Factor data by a factor'''
     return [d * factor for d in data] if is_iterable(data) else data * factor
 
-def flatten_dict(d, parent_key='', sep='-'):
+def flatten_dict(d, parent_key='', sep='__'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + str(k) if parent_key else k
