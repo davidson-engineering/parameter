@@ -3,7 +3,7 @@
 
 - Creates *Parameter* objects, that can be converted to SI units for calculations.
 - *Parameter* objects store original values and units.
-- *Parameter* objects can be read from a .yml file, or from a dictionary.
+- *Parameter* objects can be read from a YAML file, or from a dictionary.
 - A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
 - Operators multiply ('/'), divide ('.') and exponents('^') are supported.
 
@@ -23,11 +23,11 @@
 
 ```
 
-## Read parameters from .yaml file, and 
+## Read a set of several parameters from YAML file, and select a subset
 ```python
     from parameter.parameter import read_parameters_from_yaml, Parameters
 
-    # Read in a .yaml file containing nested dictionaries of parameters
+    # Read in a YAML file containing nested dictionaries of parameters
     parameters_dict = read_parameters_from_yaml("path/to/file.yaml")
 
     # Select a set of parameters
@@ -35,7 +35,7 @@
 
 ```
 
-## Print out a neat table
+## Print out a neat table, in both original and SI units
 ```python
     # Print out a neat table using PrettyTable
     table = parameters_set.table
