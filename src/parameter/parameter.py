@@ -12,10 +12,9 @@ import copy
 import re
 import itertools
 from collections.abc import Iterable
-
-from prettytable import PrettyTable
 from yaml import safe_load
 
+from prettytable import PrettyTable
 import parameter.conversion as convert
 
 FACTORS = convert.TO_SI_FACTOR
@@ -39,7 +38,6 @@ def read_yaml(filepath: str | Path) -> dict:
         path = Path.cwd() / path
     with open(path, "r") as file:
         return safe_load(file)
-
 
 
 @dataclass
@@ -156,23 +154,9 @@ class Parameters(dict):
     '''
     @property
     def table(self):
-        # table = PrettyTable()
-        # table.field_names = ["Parameter", "Value", "Units"]
-        # for key, value in self.items():
-        #     try:
-        #         value = value.value
-        #     except KeyError:
-        #         pass
-        #     try:
-        #         cell_value = round(value.value, 3)
-        #     except TypeError:
-        #         try:
-        #             cell_value = [round(v,3) for v in value.value]
-        #         except TypeError:
-        #             cell_value = value.value
-
-        #     table.add_row([key, cell_value, value.units])
-        # return table
+        '''
+        Return a pretty table of the parameters
+        '''
         table = PrettyTable()
         table.field_names = ["Parameter", "Value", "Units"]
         
@@ -307,9 +291,6 @@ def read_parameters_from_yaml(filepath: str | Path) -> dict | dict[dict]:
 
 def main():
     pass
-
-
-
 
 
 if __name__ == "__main__":
