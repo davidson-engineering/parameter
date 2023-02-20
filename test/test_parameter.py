@@ -50,3 +50,4 @@ def test_group_by_prefix():
     grouped = parameters.grouped_by_prefix
     print(grouped.table)
     print(grouped.si_units.table)
+    print(grouped.si_units.values_only)
