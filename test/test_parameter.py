@@ -47,7 +47,7 @@ def test_as_values():
 def test_group_by_prefix():
     parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
     print(parameters.table)
-    grouped = parameters.grouped_by_prefix
+    grouped = parameters.grouped
     print(grouped.table)
     print(grouped.si_units.table)
     print(grouped.si_units.values_only)

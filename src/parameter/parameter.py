@@ -179,7 +179,7 @@ class Parameters(dict):
         return Parameters({k: v.value for k, v in self.items()})
 
     @property
-    def grouped_by_prefix(self):
+    def grouped(self):
         '''
         Group parameters by prefix
         '''
