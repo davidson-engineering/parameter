@@ -259,7 +259,7 @@ def dict_to_parameters(d, convert_to_si=False):
     '''Convert a dictionary to a Parameters object'''
     flattened_dict = flatten_dict(d)
     parameters = Parameters({key: Parameter(*val) for key, val in flattened_dict.items()})
-    return parameters.to_SI() if convert_to_si else parameters
+    return parameters.si_units if convert_to_si else parameters
 
 
 def dicts_to_parameters(dict_, convert_to_si=False) -> dict | dict[dict]:
