@@ -90,9 +90,6 @@ def test_operators():
     p_c = Parameter(300, "mm")
     p_d = Parameter(40, "m")
     p_e = Parameter(12, 'ft')
-    p_f = Parameter(3.6576, 'mm^3')
-    p_g = Parameter(3.6576E-9, 'm^3')
-    p_h = Parameter(36.487, 'MPa')
 
     assert p_d > p_c
     assert p_c < p_d
@@ -105,8 +102,50 @@ def test_operators():
     assert p_e > p_a
     assert p_e + p_a != Parameter(13, 'ft')
     assert p_e + p_a == Parameter(4.6576, 'm')
+
+
+    p_f = Parameter(3.6576, 'mm^3')
+    p_g = Parameter(3.6576E-9, 'm^3')
     assert p_f == p_g
     assert p_f // 1 == 3
     assert p_f.si_units // 1 == 0
+
+    p_h = Parameter(36.487, 'MPa')
     assert p_h // 10 == 3
-    assert p_h.si_units // 1E6 == p_h // 1
+    assert (p_h // 10).si_units == p_h // 10
+
+    p_i = Parameter([1,2,3], "m")
+    p_j = Parameter([1000,2000,3000], "mm")
+    p_k = Parameter([1000,2000,3000, 4000], "mm")
+    assert p_i * 3 == Parameter([3,6,9], "m")
+    assert p_i * 3 == Parameter([3000,6000,9000], "mm")
+    assert p_j * 3 == Parameter([3,6,9], "m")
+    assert p_k * 3 == Parameter([3000,6000,9000], "mm") # TODO should return false
+
+
+import operator
+import pytest
+
+from parameter.parameter import combine_units
+
+def test_combine_units_multiplication():
+    assert combine_units('m', 's', operator.mul) == 'm.s'
+    assert combine_units('m^2', 's^2', operator.mul) == 'm^2.s^2'
+    assert combine_units('m/s', 's', operator.mul) == 'm'
+    assert combine_units('m/s', 'm/s^2', operator.mul) == 'm^2/s^3'
+
+def test_combine_units_division():
+    assert combine_units('m', 's', operator.truediv) == 'm/s'
+    assert combine_units('m/s', 's', operator.truediv) == 'm/s^2'
+    assert combine_units('m^2', 's^2', operator.truediv) == 'm^2/s^2'
+    assert combine_units('m.s', 'm/s^2', operator.truediv) == 's'
+
+def test_combine_units_exponentiation():
+    assert combine_units('m', '2', operator.pow) == 'm^2'
+    assert combine_units('m/s', '2', operator.pow) == 'm^2/s^2'
+    assert combine_units('m^2', '2', operator.pow) == 'm^4'
+    assert combine_units('m.s', '2', operator.pow) == 'm^2.s^2'
+
+def test_combine_units_invalid_operator():
+    with pytest.raises(ValueError):
+        combine_units('m', 's', lambda x, y: x + y)

@@ -12,8 +12,10 @@ import copy
 import re
 import itertools
 from collections.abc import Iterable
+from typing import Callable
 from yaml import safe_load
 import operator
+from collections import Counter
 
 from prettytable import PrettyTable
 import parameter.conversion as convert
@@ -22,7 +24,12 @@ FACTORS = convert.TO_SI_FACTOR
 UNITS = convert.TO_SI_UNITS
 EPS = 1e-10
 
-def is_iterable(element):
+MULTIPLY = ['.', '*']
+DIVIDE = ['/']
+POWER = ['^']
+
+
+def is_iterable(element) -> bool:
     '''Check if an element is iterable'''
     if isinstance(element, Iterable):
         return 1
@@ -41,6 +48,154 @@ def read_yaml(filepath: str | Path) -> dict:
     with open(path, "r") as file:
         return safe_load(file)
 
+def cast_to_list(x) -> list: 
+    '''
+    Cast an object to a list if it is not already a list
+    '''
+    if isinstance(x, list):
+        return x
+    elif isinstance(x, str):
+        return [x]
+    try:
+        return list(x)
+    except TypeError:
+        return [x]
+
+def split_string_with_separators(s: str) -> tuple[list, list]:
+    '''
+    Split a string into a list of parts, and a list of separators
+    '''
+    # Define a regular expression to match separators
+    sep_pattern = r'[/.^]'
+    parts = re.split(sep_pattern, s)
+    # Use re.findall to find all occurrences of the separator pattern in the original string
+    seps = re.findall(sep_pattern, s)
+    return parts, seps
+
+def flatten_list(list_: list) -> list:
+    '''
+    Flatten a nested list
+    '''
+    return list(itertools.chain.from_iterable(list_))
+
+import operator
+
+def apply_operator_to_units(unit1: str, unit2: str, op: Callable):
+    def split_into_denominator_and_numerator(unit):
+
+        def expand_exponent(base, power):
+            try:
+                power = int(power)
+                return [base for _ in range(power)]
+            except ValueError:
+                raise ValueError(f"Invalid unit: {unit} - {power} is not a valid exponent")
+        
+        def group_exponents(parts, seps):
+            if '^' in seps:
+                for i, sep in enumerate(seps):
+                    if sep == '^':
+                        parts[i] = expand_exponent(parts[i], parts[i+1])
+                        parts.pop(i+1)
+                        seps.pop(i)
+            return flatten_list(parts), seps
+        
+
+
+        # if unit contains a '(' character, them recursively call split_into_denominator_and_numerator on the contents of the parentheses
+        if '(' in unit:
+            # Find the index of the first '(' character
+            start = unit.find('(')
+            # Find the index of the corresponding ')' character
+            end = unit.find(')')
+            # Split the unit into three parts: the part before the parentheses, the con
+            # tents of the parentheses, and the part after the parentheses
+            unit_before_parentheses = unit[:start]
+            unit_inside_parentheses = unit[start+1:end]
+            unit_after_parentheses = unit[end+1:]
+            # Split the unit inside the parentheses into numerator and denominator parts
+            num_parts_inside_parentheses, denom_parts_inside_parentheses = split_into_denominator_and_numerator(unit_inside_parentheses)
+            # If the unit before the parentheses is not empty, multiply the numerator parts by the unit before the parentheses
+            if unit_before_parentheses:
+                if unit_before_parentheses[-1] in DIVIDE:
+                    numerator_parts = denom_parts_inside_parentheses
+                    denominator_parts = num_parts_inside_parentheses
+                else:
+                    numerator_parts = num_parts_inside_parentheses
+                    denominator_parts = denom_parts_inside_parentheses
+        else:
+            denominator_parts = []
+            numerator_parts = []
+
+        parts, seps = split_string_with_separators(unit)
+        parts, seps = group_exponents(parts, seps)
+        if len(seps) == 0:
+            return parts, []
+        for i, sep in enumerate(seps):
+            if sep == '/':
+                numerator_parts.append(parts[i])
+                denominator_parts.append(parts[i+1])
+            elif sep == '.':
+                numerator_parts.append(parts[i])
+                numerator_parts.append(parts[i+1])
+        return numerator_parts, denominator_parts
+
+    unit1_numerator, unit1_denominator = split_into_denominator_and_numerator(unit1)
+    unit2_numerator, unit2_denominator = split_into_denominator_and_numerator(unit2)
+
+    if op == operator.mul:
+        combined_unit_numerator = unit1_numerator + unit2_numerator
+        combined_unit_denominator = unit1_denominator + unit2_denominator
+    elif op == operator.truediv:
+        combined_unit_numerator = unit1_numerator + unit2_denominator
+        combined_unit_denominator = unit1_denominator + unit2_numerator
+    elif op == operator.pow:
+        raise ValueError("Not supported - Cannot combine units with exponent operator")
+
+    numerator_cancelled, denominator_cancelled = cancel_common_units(combined_unit_numerator, combined_unit_denominator)
+
+    simple_numerator = simplify_unit_list(numerator_cancelled)
+    simple_denominator = simplify_unit_list(denominator_cancelled)
+    numerator = '.'.join(simple_numerator)
+    if simple_denominator:
+        denominator = '/' + '/'.join(simple_denominator)
+    else:
+        denominator = ''
+    return numerator+denominator
+
+def simplify_unit_list(units: str) -> str:
+
+    simplified_units = []
+
+    for unit, count in Counter(units).items():
+        if count == 1:
+            # If the unit has an exponent of 1, don't include the exponent
+            simplified_units.append(unit)
+        else:
+            # If the unit has an exponent greater than 1, include the exponent
+            simplified_units.append(f"{unit}^{count}")
+
+    # Combine the simplified units into a single string
+    if not simplified_units:
+        return ""
+    else:
+        return simplified_units
+
+def cancel_common_units(numerator: list, denominator: list):
+    num_counter = Counter(numerator)
+    den_counter = Counter(denominator)
+    for unit, count in num_counter.items():
+        if unit in denominator:
+            if count > den_counter[unit]:
+                num_counter[unit] -= den_counter[unit]
+                den_counter[unit] = 0
+            else:
+                den_counter[unit] -= num_counter[unit]
+                num_counter[unit] = 0
+    numerator_cancelled = [[unit for _ in range(count)] for unit, count in num_counter.items() if count > 0]
+    denominator_cancelled = [[unit for _ in range(count)] for unit, count in den_counter.items() if count > 0]
+    return flatten_list(numerator_cancelled), flatten_list(denominator_cancelled)
+
+
 
 @dataclass
 class Parameter:
@@ -54,74 +209,94 @@ class Parameter:
     def __repr__(self):
         return f"{self.value}{self.units}"
 
-    def __eq__(self, other):
+    def __eq__(self, other: float | list | Parameter) -> bool:
         if isinstance(other, (int, float)):
-            return (self.value - other) < EPS
+            return all(v - other for v in self) < EPS
         try:
             self_si, other_si = self.si_units, other.si_units
         except AttributeError:
             self_si = self.si_units
             other_si = Parameter(other, self_si.units)
-        return (self_si.value - other_si.value) < EPS and self_si.units == other_si.units
+        return (
+            all(
+                abs(v_self - v_other) < EPS
+                for v_self, v_other in zip(self_si, other_si)
+            )
+            and self_si.units == other_si.units
+        )
 
-    def __ne__(self, other):
+    def __ne__(self, other: float | list | Parameter) -> bool:
         return not self == other
     
-    def _apply_operator(self, other, op_func):
+    def _apply_operator(self, other: float | list | Parameter, op_func: Callable) -> Parameter:
         if isinstance(other, (int, float)):
-            return Parameter(op_func(self.value, other), self.units)
+            value = [op_func(v, other) for v in self]
+            return Parameter(value, self.units)
         try:
             self_si, other_si = self.si_units, other.si_units
             if self_si.units != other_si.units:
-                raise ValueError("Cannot operate on parameters with different units.")
+                logging.warning(f"Operator {op_func} being applied to Parameters with different units.")
         except AttributeError:
             self_si = self.si_units
             other_si = Parameter(other, self_si.units)
-        value = op_func(self_si.value, other_si.value if isinstance(other, Parameter) else other)
+        if isinstance(self_si.value, list):
+            if isinstance(other_si.value, list):
+                assert len(self_si.value) == len(other_si.value), "Lists must be the same length"
+                value = [op_func(self_si.value[i], other_si.value[i]) for i in range(len(self_si.value))]
+            else:
+                value = [op_func(self_si.value[i], other_si.value) for i in range(len(self_si.value))]
+        else:
+            value = op_func(self_si.value, other_si.value if isinstance(other, Parameter) else other)
+        units = combine_units(self_si.units, other_si.units, op_func)
         return Parameter(value, self_si.units)
 
-    def __add__(self, other):
+    def __add__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.add)
 
-    def __sub__(self, other):
+    def __sub__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.sub)
 
-    def __mul__(self, other):
+    def __mul__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.mul)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.truediv)
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.floordiv)
     
-    def __mod__(self, other):
+    def __mod__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.mod)
     
-    def __pow__(self, other):
+    def __pow__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.pow)
 
-    def __gt__(self, other):
+    def __gt__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.gt)
     
-    def __ge__(self, other):
+    def __ge__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.ge)
     
-    def __lt__(self, other):
+    def __lt__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.lt)
     
-    def __le__(self, other):
+    def __le__(self, other: float | list | Parameter) -> Parameter:
         return self._apply_operator(other, operator.le)
     
-    def __abs__(self):
+    def __abs__(self) -> Parameter:
         return Parameter(abs(self.value), self.units)
     
-    def __neg__(self):
+    def __neg__(self) -> Parameter:
         return Parameter(-self.value, self.units)
 
-    def __float__(self):
+    def __float__(self) -> float:
         return float(self.value)
-    
+
+    def __iter__(self) -> Iterable:
+        return iter(cast_to_list(self.value))
+
+    def __len__(self) -> int:
+        return len(cast_to_list(self.value))
 
 
     @property
@@ -145,24 +320,13 @@ class Parameter:
         -----
         """
 
-        def split_string_with_separators(s: str):
-            '''
-            Split a string into a list of parts, and a list of separators
-            '''
-            # Define a regular expression to match separators
-            sep_pattern = r'[/.^]'
-            parts = re.split(sep_pattern, s)
-            # Use re.findall to find all occurrences of the separator pattern in the original string
-            seps = re.findall(sep_pattern, s)
-            return parts, seps
 
-
-        def find_indexes_of_char(string_list, char: str):
+        def find_indexes_of_char(string_list: list, char: str):
             return [i for i, s in enumerate(string_list) if char in s]
 
 
 
-        def get_SI_factor(units):
+        def get_SI_factor(units: str) -> float:
             '''Convert the units to SI units'''
             unit_components, separators = split_string_with_separators(units)
 
@@ -182,7 +346,7 @@ class Parameter:
             return product(power_factors + multiply_factors + divide_factors)            
 
         
-        def get_SI_units(units):
+        def get_SI_units(units: str) -> str:
             '''Convert the units to SI units'''
             # Split the units by either "/" or "."
             unit_components, separators = split_string_with_separators(units)
@@ -226,7 +390,7 @@ class Parameters(dict):
     Parameters class
     '''
     @property
-    def table(self):
+    def table(self) -> PrettyTable:
         '''
         Return a pretty table of the parameters
         '''
@@ -253,18 +417,18 @@ class Parameters(dict):
 
 
     @property
-    def si_units(self):
+    def si_units(self) -> Parameters:
         return Parameters({key: param.si_units for key, param in self.items()})
     
     @property
-    def values_only(self):
+    def values_only(self) -> Parameters:
         '''
         Return a dictionary of values in SI units only
         '''
         return Parameters({k: v.value for k, v in self.si_units.items()})
 
     @property
-    def grouped(self):
+    def grouped(self) -> Parameters:
         '''
         Group parameters by prefix
         '''
@@ -293,10 +457,10 @@ class Parameters(dict):
 
         return Parameters(**grouped_dict)
     
-    def get_multi(self, inclusions):
+    def get_multi(self, inclusions: list) -> dict:
         return {inc: self[inc] for inc in inclusions}
 
-    def get_common(self, prefix: str):
+    def get_common(self, prefix: str) -> list:
         '''
         Get the common value for a parameter
         '''
@@ -306,13 +470,13 @@ class Parameters(dict):
             for k,v in self.items()
             if k.startswith(prefix)]
 
-    def items(self):
+    def items(self) -> list:
         if dataclasses.is_dataclass(self):
             return [(name, getattr(self, name)) for name in self.__dataclass_fields__]
         else:
             return [(key, self[key]) for key in self]
 
-def tabulate_object_attrs(obj):
+def tabulate_object_attrs(obj: object) -> PrettyTable:
     '''
     Tabulate the attributes of an object
     '''
@@ -330,11 +494,11 @@ def tabulate_object_attrs(obj):
         tabulate_nested_dict(getattr(obj, attr), f"{attr}.")
     return table
 
-def factor(data, factor):
+def factor(data: float | Iterable, factor: float) -> list:
     '''Factor data by a factor'''
     return [d * factor for d in data] if is_iterable(data) else data * factor
 
-def flatten_dict(d, parent_key='', sep='__'):
+def flatten_dict(d:dict, parent_key:str='', sep:str='__') -> dict:
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + str(k) if parent_key else k
@@ -344,19 +508,19 @@ def flatten_dict(d, parent_key='', sep='__'):
             items.append((new_key, v))
     return dict(items)
 
-def dict_to_parameters(d, convert_to_si=False):
+def dict_to_parameters(d:dict, convert_to_si=False) -> Parameters:
     '''Convert a dictionary to a Parameters object'''
     flattened_dict = flatten_dict(d)
     parameters = Parameters({key: Parameter(*val) for key, val in flattened_dict.items()})
     return parameters.si_units if convert_to_si else parameters
 
 
-def dicts_to_parameters(dict_, convert_to_si=False) -> dict | dict[dict]:
+def dicts_to_parameters(d: dict, convert_to_si: bool=False) -> dict[Parameters]:
     '''Convert a dictionary of dictionaries to a dictionary of Parameters objects'''
-    return {k: dict_to_parameters(v, convert_to_si=convert_to_si) for k, v in dict_.items()}
+    return {k: dict_to_parameters(v, convert_to_si=convert_to_si) for k, v in d.items()}
 
 
-def read_parameters_from_yaml(filepath: str | Path) -> dict | dict[dict]:
+def read_parameters_from_yaml(filepath: str | Path) -> Parameters:
     '''Parse a yaml file to a Parameters object'''
     parameters_dict = read_yaml(filepath)
     return dicts_to_parameters(parameters_dict)
