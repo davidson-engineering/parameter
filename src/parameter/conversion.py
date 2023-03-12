@@ -1,6 +1,10 @@
 from math import pi
 
+DIMENSIONLESS = (1, '1', '-')
+
 TO_SI_FACTOR = {
+    '1': 1,
+    1: 1,
     'km': 1e3,
     "m": 1,
     "mm": 1 / 1e3,
@@ -49,6 +53,8 @@ TO_SI_FACTOR = {
 }
 
 TO_SI_UNITS = {
+    '1': '1',
+    1: 1,
     'km': 'm',
     "m": "m",
     "mm": "m",
