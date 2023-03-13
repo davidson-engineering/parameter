@@ -84,6 +84,19 @@ def test_imperial_units():
     param_b = Parameter(1/14.5939029372064, "slug")
     assert param_a == param_b
 
+def test_array_parameters():
+    import numpy as np
+    data = np.random.rand(10, 10)
+    # create a new paramter as a random array
+    param_a = Parameter(data, "m")
+    # create a new parameter as a random array
+    param_b = Parameter(data, "mm") * 1000
+    # check that the two parameters are equal
+    assert param_a == param_b
+
+
+    
+
 def test_operators():
     p_a = Parameter(1, "m")
     p_b = Parameter(25, "mm")

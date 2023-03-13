@@ -100,7 +100,13 @@ class Parameter:
     def __mul__(self, other):
         return self._apply_operator(other, operator.mul)
 
+    def __rmul__(self, other):
+        return self._apply_operator(other, operator.mul)
+
     def __truediv__(self, other):
+        return self._apply_operator(other, operator.truediv)
+
+    def __rtruediv__(self, other):
         return self._apply_operator(other, operator.truediv)
 
     def __floordiv__(self, other):
@@ -138,6 +144,9 @@ class Parameter:
 
     def to_numpy(self):
         return asarray(self.value)
+
+    def __int__(self):
+        return int(self.value)
 
     @property
     def si_units(self):
@@ -248,6 +257,10 @@ class Parameters(dict):
     Parameters class
     """
 
+    def __init__(self, *args, **kwargs):
+        self.groups = []
+        super().__init__(*args, **kwargs)
+
     @property
     def table(self):
         """
@@ -276,16 +289,26 @@ class Parameters(dict):
 
     @property
     def si_units(self):
-        return self.__class__(**{key: param.si_units for key, param in self.items()})
+        return self.__class__(**{key: param.si_units for key, param in self.items()}).group_by_prefix()
 
     @property
     def values_only(self):
         """
         Return a dictionary of values in SI units only
         """
-        return self.__class__(**{k: v.value for k, v in self.si_units.items()})
 
-    def group_by_prefix(self) -> dict:
+        return self.__class__(**{k: v.value for k, v in self.si_units.items()}).group_by_prefix()
+
+    @property
+    def ungrouped_values_only(self):
+        """
+        Return a dictionary of values in SI units only
+        """
+        return self.__class__(
+            **{k: v.value for k, v in self.items() if k not in self.groups}
+        )
+
+    def group_by_prefix(self) -> Parameters:
         """
         Group parameters by prefix
         """
@@ -293,14 +316,17 @@ class Parameters(dict):
             keys = list(dataclasses.asdict(self))
         else:
             keys = list(self.keys())
+
+        copy_self = copy.deepcopy(self)
         groups = {}
         regex = r"(\w+)__\w+"
         matches = [re.search(regex, key) for key in keys]
         groups = {match.group(1) for match in matches if match is not None}
+        copy_self.groups = groups
 
         for group in groups:
             group_units = {
-                self[key].units
+                copy_self[key].units
                 for key in keys
                 if (key.startswith(group) and key != group)
             }
@@ -310,22 +336,21 @@ class Parameters(dict):
                 )
                 raise ValueError(f"Units for {group} are not consistent")
 
-            self.__setattr__(
+            copy_self.__setattr__(
                 group,
                 Parameter(value=self.get_common_value(group), units=group_units.pop()),
             )
+        # TODO need to fix bug where dataclass loses repr of parameters
+        # return dict_to_parameters(dataclasses.asdict(copy_self), object_type=copy_self.__class__)
 
-        return self
+        return copy_self
 
     def get_multi(self, inclusions: list) -> dict:
         """
         Get a dictionary of parameters with multiple values
         """
 
-        return {
-            inc: self[inc]
-            for inc in inclusions
-        }
+        return {inc: self[inc] for inc in inclusions}
 
     def get_common_value(self, prefix: str) -> list:
         """
@@ -338,6 +363,15 @@ class Parameters(dict):
                 if name.startswith(prefix) and name != prefix
             ]
         return [v.value for k, v in self.items() if k.startswith(prefix)]
+
+    def flatten(self):
+        """
+        Flatten the parameters into a dictionary
+        """
+        if dataclasses.is_dataclass(self):
+            return self.__class__(**flatten_dict(dataclasses.asdict(self)))
+        else:
+            return flatten_dict(self)
 
     def items(self):
         if dataclasses.is_dataclass(self):
@@ -387,12 +421,26 @@ def flatten_dict(d, parent_key="", sep="__"):
     return dict(items)
 
 
-def dict_to_parameters(d, convert_to_si=False):
+def dict_to_parameters(
+    d,
+    parent_key="",
+    sep="__",
+    convert_to_si=False,
+    object_type=Parameters,
+    group_by_prefix=False,
+):
     """Convert a dictionary to a Parameters object"""
-    flattened_dict = flatten_dict(d)
-    parameters = Parameters(
-        {key: Parameter(*val) for key, val in flattened_dict.items()}
-    )
+    flattened_dict = flatten_dict(d, parent_key=parent_key, sep=str(sep))
+    try:
+        parameters = object_type(
+            **{key: Parameter(*val) for key, val in flattened_dict.items()}
+        )
+    except TypeError:
+        parameters = object_type(
+            **{key: Parameter(**val) for key, val in flattened_dict.items()}
+        )
+    if group_by_prefix:
+        parameters = parameters.group_by_prefix()
     return parameters.si_units if convert_to_si else parameters
 
 
@@ -403,10 +451,21 @@ def dicts_to_parameters(dict_, convert_to_si=False) -> dict | dict[dict]:
     }
 
 
-def read_parameters_from_yaml(filepath: str | Path) -> dict | dict[dict]:
+def read_parameters_from_yaml(
+    filepath: str | Path,
+    group_by_prefix=False,
+    convert_to_si=False,
+    object_type=Parameters,
+) -> dict | dict[dict]:
     """Parse a yaml file to a Parameters object"""
     parameters_dict = read_yaml(filepath)
-    return dict_to_parameters(parameters_dict)
+    return dict_to_parameters(
+        parameters_dict,
+        group_by_prefix=group_by_prefix,
+        convert_to_si=convert_to_si,
+        object_type=object_type,
+    )
+
 
 def read_set_of_parameters_from_yaml(filepath: str | Path) -> dict | dict[dict]:
     """Parse a yaml file to a Parameters object"""
