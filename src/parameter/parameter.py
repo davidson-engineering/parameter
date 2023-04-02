@@ -299,14 +299,24 @@ class Parameters(dict):
 
         return self.__class__(**{k: v.value for k, v in self.si_units.items()}).group_by_prefix()
 
-    @property
+    # @property
+    # def ungrouped_values_only(self):
+    #     """
+    #     Return a dictionary of values in SI units only
+    #     """
+    #     return self.__class__(
+    #         **{k: v.value for k, v in self.items() if k not in self.groups}
+    #     )
     def ungrouped_values_only(self):
         """
         Return a dictionary of values in SI units only
         """
-        return self.__class__(
-            **{k: v.value for k, v in self.items() if k not in self.groups}
-        )
+        try:
+            return self.__class__(
+                **{k: v.value for k, v in self.items() if k not in self.groups}
+            )
+        except AttributeError:
+            return self.__class__(**{k: v.value for k, v in self.items()})
 
     def group_by_prefix(self) -> Parameters:
         """
