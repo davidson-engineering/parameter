@@ -14,7 +14,7 @@ import itertools
 from collections.abc import Iterable
 from yaml import safe_load
 import operator
-from numpy import asarray
+from numpy import asarray, ndarray
 from prettytable import PrettyTable
 import parameter.conversion as convert
 
@@ -63,9 +63,10 @@ class Parameter:
         except AttributeError:
             self_si = self.si_units
             other_si = Parameter(other, self_si.units)
-        return (
-            self_si.value - other_si.value
-        ) < EPS and self_si.units == other_si.units
+        try:
+            return (self_si.value - other_si.value) < EPS and self_si.units == other_si.units
+        except ValueError: 
+            return (self_si.value - other_si.value).all() < EPS and self_si.units == other_si.units
 
     def __ne__(self, other):
         return not self == other
@@ -224,14 +225,16 @@ class Parameter:
             ):
                 if component in UNITS:
                     converted_units.append(UNITS[component])
+                elif component.isnumeric():
+                    if separator == "^":
+                        try:
+                            exponent = int(component)
+                            converted_units.append(str(exponent))
+                        except ValueError:
+                            raise ValueError(f"Exponent {component} is not an integer")
                 else:
+                    logging.error(f"Unit {component} not found in UNITS dictionary")
                     raise ValueError(f"Unit {component} not found in UNITS dictionary")
-                if separator == "^":
-                    try:
-                        exponent = int(component)
-                        converted_units.append(str(exponent))
-                    except ValueError:
-                        raise ValueError(f"Exponent {component} is not an integer")
 
             while len(separators) < len(converted_units):
                 separators.append("")
@@ -307,6 +310,7 @@ class Parameters(dict):
     #     return self.__class__(
     #         **{k: v.value for k, v in self.items() if k not in self.groups}
     #     )
+    @property
     def ungrouped_values_only(self):
         """
         Return a dictionary of values in SI units only
@@ -335,11 +339,13 @@ class Parameters(dict):
         copy_self.groups = groups
 
         for group in groups:
-            group_units = {
-                copy_self[key].units
-                for key in keys
-                if (key.startswith(group) and key != group)
-            }
+            group_units = set()
+            for key in keys:
+                if (key.startswith(group) and key != group):
+                    try:
+                        group_units.add(copy_self[key].units)
+                    except AttributeError:
+                        group_units.add('-')
             if len(group_units) > 1:
                 logging.error(
                     'Units for parameter %s are not consistent, cannot continue safely", group'
@@ -372,7 +378,10 @@ class Parameters(dict):
                 for name in self.__dataclass_fields__
                 if name.startswith(prefix) and name != prefix
             ]
-        return [v.value for k, v in self.items() if k.startswith(prefix)]
+        try:
+            return [v.value for k, v in self.items() if k.startswith(prefix)]
+        except AttributeError:
+            return [v for k, v in self.items() if k.startswith(prefix)]
 
     def flatten(self):
         """
@@ -417,7 +426,13 @@ def tabulate_object_attrs(obj):
 
 def factor(data, factor):
     """Factor data by a factor"""
-    return [d * factor for d in data] if is_iterable(data) else data * factor
+    if isinstance(data, ndarray):
+        return data * factor
+    if isinstance(data, str):
+        return data
+    if is_iterable(data):
+        return [d * factor for d in data]
+    return data * factor
 
 
 def flatten_dict(d, parent_key="", sep="__"):
@@ -441,14 +456,20 @@ def dict_to_parameters(
 ):
     """Convert a dictionary to a Parameters object"""
     flattened_dict = flatten_dict(d, parent_key=parent_key, sep=str(sep))
-    try:
-        parameters = object_type(
-            **{key: Parameter(*val) for key, val in flattened_dict.items()}
-        )
-    except TypeError:
-        parameters = object_type(
-            **{key: Parameter(**val) for key, val in flattened_dict.items()}
-        )
+    parameter_kvpairs = {}
+    for key, val in flattened_dict.items():
+        try:
+            parameter_kvpairs[key] = Parameter(*val)
+        except TypeError:
+            try:
+                parameter_kvpairs[key] = Parameter(**val)
+            except TypeError:
+                parameter_kvpairs[key] = Parameter(val, units="-")
+
+    parameters = object_type(
+        **parameter_kvpairs
+    )
+
     if group_by_prefix:
         parameters = parameters.group_by_prefix()
     return parameters.si_units if convert_to_si else parameters

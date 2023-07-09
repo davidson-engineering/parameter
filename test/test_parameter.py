@@ -1,4 +1,4 @@
-from parameter.parameter import read_parameters_from_yaml, Parameters, Parameter
+from parameter.parameter import Parameters, Parameter, read_set_of_parameters_from_yaml
 
 def test_parameter(test_params):
 
@@ -28,7 +28,7 @@ def test_parameter(test_params):
     assert test_params['l'].si_units.units == "N.m"
 
 def test_build_from_yaml():
-    parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
+    parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
     table = parameters.table
     print("Parameters in original units:")
     print(table)
@@ -37,17 +37,17 @@ def test_build_from_yaml():
     print(table_SI)
 
 def test_common():
-    parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
-    parameters.get_common("end_affector_cog")
+    parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
+    parameters.get_common_value("end_affector_cog")
 
 def test_as_values():
-    parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
+    parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
     parameters.values_only
 
 def test_group_by_prefix():
-    parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
+    parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
     print(parameters.table)
-    grouped = parameters.grouped
+    grouped = parameters.group_by_prefix()
     print(grouped.table)
     print(grouped.si_units.table)
     print(grouped.si_units.values_only)

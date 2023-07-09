@@ -12,3 +12,5 @@ test_parameters:
     x: [50, mm]
     y: [-1, mm]
     z: [0, mm]
+  string_parameter: [string, -]
+  pure_string_parameter: string
