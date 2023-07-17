@@ -138,6 +138,20 @@ def test_tables():
     print("Pretty SI table:")
     print(parameters.si_units.table_pretty)
 
+    # Create new subclass of Parameters:
+
+    class ParametersSubclass(Parameters):
+        def __init__(self, parameters):
+            super().__init__(parameters)
+            self.param_a = Parameter(1, "m")
+            self.param_b = Parameter(2, "mm")
+            self.param_c = Parameter([3,4,5], "mm/s")
+
+    subclassed_parameters = ParametersSubclass(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
+    # print atable
+    print("subclassed_parameters.table():")
+    print(subclassed_parameters.table())
+
 
 def test_conversion_to_dict(test_params):
 

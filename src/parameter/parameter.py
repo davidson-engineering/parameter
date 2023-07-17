@@ -268,7 +268,7 @@ class Parameters(dict):
     def table(self, header=True):
         result = [
             [parameter_name, parameter_value.value, parameter_value.units]
-            for parameter_name, parameter_value in self.asdict.items()
+            for parameter_name, parameter_value in self.items()
         ]
         if header:
             result.insert(0, ["Parameter", "Value", "Units"])
