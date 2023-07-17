@@ -17,6 +17,7 @@ import operator
 from numpy import asarray, ndarray
 from prettytable import PrettyTable
 import parameter.conversion as convert
+from pandas import DataFrame
 
 FACTORS = convert.TO_SI_FACTOR
 UNITS = convert.TO_SI_UNITS
@@ -266,6 +267,14 @@ class Parameters(dict):
 
     @property
     def table(self):
+        # Return a pandas dataframe of the parameters
+        return DataFrame(
+            {key: [value.value, value.units] for key, value in self.items()},
+            index=["Value", "Units"],
+        )
+
+    @property
+    def table_pretty(self):
         """
         Return a pretty table of the parameters
         """

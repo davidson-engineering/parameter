@@ -123,3 +123,17 @@ def test_operators():
     assert p_f.si_units // 1 == 0
     assert p_h // 10 == 3
     assert p_h.si_units // 1E6 == p_h // 1
+
+
+def test_tables():
+    parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
+    print("Original table:")
+    print(parameters.table)
+    print("SI table:")
+    print(parameters.si_units.table)
+    print("SI table values only:")
+    print(parameters.si_units.values_only)
+    print("Pretty table:")
+    print(parameters.table_pretty)
+    print("Pretty SI table:")
+    print(parameters.si_units.table_pretty)
