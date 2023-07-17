@@ -311,14 +311,13 @@ class Parameters(dict):
 
         return self.__class__(**{k: v.value for k, v in self.si_units.items()}).group_by_prefix()
 
-    # @property
-    # def ungrouped_values_only(self):
-    #     """
-    #     Return a dictionary of values in SI units only
-    #     """
-    #     return self.__class__(
-    #         **{k: v.value for k, v in self.items() if k not in self.groups}
-    #     )
+    @property
+    def asdict(self):
+        if dataclasses.is_dataclass(self):
+            return dataclasses.asdict(self)
+        else:
+            return dict(**self)
+        
     @property
     def ungrouped_values_only(self):
         """
@@ -412,12 +411,8 @@ class Parameters(dict):
             return getattr(self, key)
         else:
             return super().__getitem__(key)
-        
-    def asdict(self):
-        if dataclasses.is_dataclass(self):
-            return dataclasses.asdict(self)
-        else:
-            return dict(**self)
+    
+
 
 
 def tabulate_object_attrs(obj):

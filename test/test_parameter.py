@@ -142,6 +142,6 @@ def test_tables():
 def test_conversion_to_dict(test_params):
     parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
 
-    print(f"parameters.to_dict(): {parameters.asdict()}")
+    print(f"parameters.asdict: {parameters.asdict}")
 
-    print(f"test_params.to_dict(): {Parameters(**test_params).asdict()}")
+    print(f"test_params.asdict: {Parameters(**test_params).asdict}")
