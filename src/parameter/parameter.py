@@ -265,13 +265,14 @@ class Parameters(dict):
         self.groups = []
         super().__init__(*args, **kwargs)
 
-    @property
-    def table(self):
-        # Return a pandas dataframe of the parameters
-        return DataFrame(
-            {key: [value.value, value.units] for key, value in self.items()},
-            index=["Value", "Units"],
-        )
+    def table(self, header=True):
+        result = [
+            [parameter_name, parameter_value.value, parameter_value.units]
+            for parameter_name, parameter_value in self.asdict.items()
+        ]
+        if header:
+            result.insert(0, ["Parameter", "Value", "Units"])
+        return result
 
     @property
     def table_pretty(self):

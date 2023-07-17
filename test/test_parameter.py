@@ -128,9 +128,9 @@ def test_operators():
 def test_tables():
     parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
     print("Original table:")
-    print(parameters.table)
+    print(parameters.table())
     print("SI table:")
-    print(parameters.si_units.table)
+    print(parameters.si_units.table())
     print("SI table values only:")
     print(parameters.si_units.values_only)
     print("Pretty table:")
@@ -140,6 +140,7 @@ def test_tables():
 
 
 def test_conversion_to_dict(test_params):
+
     parameters = Parameters(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
 
     print(f"parameters.asdict: {parameters.asdict}")
