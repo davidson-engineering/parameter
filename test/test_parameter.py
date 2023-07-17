@@ -130,7 +130,7 @@ def test_tables():
     print("Original table:")
     print(parameters.table())
     print("SI table:")
-    print(parameters.si_units.table())
+    print(parameters.si_units.table().data)
     print("SI table values only:")
     print(parameters.si_units.values_only)
     print("Pretty table:")
@@ -148,9 +148,14 @@ def test_tables():
             self.param_c = Parameter([3,4,5], "mm/s")
 
     subclassed_parameters = ParametersSubclass(read_set_of_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
-    # print atable
-    print("subclassed_parameters.table():")
-    print(subclassed_parameters.table())
+    # print a table from a subclass of Parameters
+    print("subclassed_parameters.table().data:")
+    print(subclassed_parameters.table().data)
+
+    # print a pretty table from a subclass of Parameters
+    print("subclassed_parameters.table_pretty:")
+    print(subclassed_parameters.table_pretty)
+    
 
 
 def test_conversion_to_dict(test_params):

@@ -44,6 +44,23 @@ def read_yaml(filepath: str | Path) -> dict:
     with open(path, "r") as file:
         return safe_load(file)
 
+class Table:
+    # A simple table class
+    # Intended to be a lightweight alternative to pandas.DataFrame, for the purpose of separating the data from the headers
+    def __init__(self, data, header=True):
+        if not header:
+            # insert blank row at the top
+            data.insert(0, [""] * len(data[0]))
+        self.data = data
+
+    @property
+    def columns(self):
+        return self.data[0]
+
+    @property
+    def values(self):
+        return self.data[1:]
+
 
 @dataclass
 class Parameter:
@@ -272,7 +289,7 @@ class Parameters(dict):
         ]
         if header:
             result.insert(0, ["Parameter", "Value", "Units"])
-        return result
+        return Table(result)
 
     @property
     def table_pretty(self):
@@ -412,7 +429,6 @@ class Parameters(dict):
             return getattr(self, key)
         else:
             return super().__getitem__(key)
-    
 
 
 
