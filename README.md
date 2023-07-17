@@ -63,11 +63,11 @@ parameters_set = parameters["subset_parameters"]
 
 ```
 
-## Print out a neat table
+## Print out a pretty table
 In both original and SI units
 ```python
 # Print out a neat table using PrettyTable
-table = parameters.table
+table = parameters.table_pretty
 print(table)
 +-------------------------+-------+-------+
 |        Parameter        | Value | Units |
@@ -86,7 +86,7 @@ print(table)
 +-------------------------+-------+-------+
 
 # Print out the parameters in SI units
-table_SI = parameters.si_units.table
+table_SI = parameters.si_units.table_pretty
 print(table_SI)
 +-------------------------+--------+-------+
 |        Parameter        | Value  | Units |
@@ -127,7 +127,7 @@ params_subclass_object = ParametersSubclass(**param_dict)
 
 params_subclass_object_si = params_subclass_object.si_units
 
-print(params_subclass_object_si.table)
+print(params_subclass_object_si.table_pretty)
 +-----------+-----------------------+-------+
 | Parameter |         Value         | Units |
 +-----------+-----------------------+-------+
@@ -145,7 +145,7 @@ from parameter.parameter import read_parameters_from_yaml, Parameters
 
 parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
 
-print(parameters.table)
+print(parameters.table_pretty)
 +-------------------------+-------+-------+
 |        Parameter        | Value | Units |
 +-------------------------+-------+-------+
@@ -162,7 +162,7 @@ print(parameters.table)
 |   end_affector_cog__z   |   0   |   mm  |
 +-------------------------+-------+-------+
 
-print(parameters.grouped.table)
+print(parameters.grouped.table_pretty)
 +----------------------+---------------+-------+
 |      Parameter       |     Value     | Units |
 +----------------------+---------------+-------+
