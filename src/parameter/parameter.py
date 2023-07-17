@@ -412,6 +412,12 @@ class Parameters(dict):
             return getattr(self, key)
         else:
             return super().__getitem__(key)
+        
+    def asdict(self):
+        if dataclasses.is_dataclass(self):
+            return dataclasses.asdict(self)
+        else:
+            return dict(**self)
 
 
 def tabulate_object_attrs(obj):
