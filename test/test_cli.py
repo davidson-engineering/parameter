@@ -5,7 +5,7 @@ import sys
 import pytest
 import yaml
 
-from parameter.cli import main
+from engparams.cli import main
 
 ROBOT = """\
 motor:
@@ -89,7 +89,7 @@ def test_non_utf8_file(capsys, tmp_path):
     path.write_bytes("name: caf\xe9".encode("latin-1"))
     code, _, err = run(capsys, path)
     assert code == 1
-    assert err.startswith(f"parameter: error: {path} is not UTF-8 text")
+    assert err.startswith(f"engparams: error: {path} is not UTF-8 text")
 
 
 def test_yaml_and_json(capsys, robot):
@@ -106,13 +106,13 @@ def test_yaml_and_json(capsys, robot):
 def test_missing_file(capsys, tmp_path):
     code, out, err = run(capsys, tmp_path / "missing.yaml")
     assert (code, out) == (1, "")
-    assert err.startswith("parameter: error: [Errno 2] No such file or directory")
+    assert err.startswith("engparams: error: [Errno 2] No such file or directory")
 
 
 def test_missing_key(capsys, robot):
     code, _, err = run(capsys, robot, "motor.power")
     assert code == 1
-    assert err == f"parameter: error: {robot} has no parameter or group 'motor.power'\n"
+    assert err == f"engparams: error: {robot} has no parameter or group 'motor.power'\n"
 
 
 def test_invalid_file(capsys, tmp_path):
@@ -120,7 +120,7 @@ def test_invalid_file(capsys, tmp_path):
     path.write_text("arm:\n  length: [1, mx]\n", encoding="utf-8")
     code, _, err = run(capsys, path)
     assert code == 1
-    assert err.startswith("parameter: error: arm.length: invalid units 'mx'")
+    assert err.startswith("engparams: error: arm.length: invalid units 'mx'")
 
 
 def test_malformed_yaml(capsys, tmp_path):
@@ -128,12 +128,12 @@ def test_malformed_yaml(capsys, tmp_path):
     path.write_text("arm: [1, m\n", encoding="utf-8")
     code, _, err = run(capsys, path)
     assert code == 1
-    assert err.startswith("parameter: error: while parsing a flow sequence")
+    assert err.startswith("engparams: error: while parsing a flow sequence")
 
 
 def test_module_entry_point(robot):
     result = subprocess.run(
-        [sys.executable, "-m", "parameter", str(robot), "arm", "-f", "csv"],
+        [sys.executable, "-m", "engparams", str(robot), "arm", "-f", "csv"],
         capture_output=True,
         text=True,
         check=True,

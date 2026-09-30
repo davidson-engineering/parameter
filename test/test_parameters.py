@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import yaml
 
-from parameter import DimensionalityError, Parameter, ParameterError, Parameters, UnitError
+from engparams import DimensionalityError, Parameter, ParameterError, Parameters, UnitError
 
 
 def test_reads_every_leaf_form(params):

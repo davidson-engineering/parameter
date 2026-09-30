@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from parameter.cli import main
+from engparams.cli import main
 
 README = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
 BLOCK = re.compile(r"^```(\w+)\n(.*?)^```", re.MULTILINE | re.DOTALL)
@@ -33,12 +33,12 @@ def test_python_examples(readme_files):
 
 
 def test_command_line_examples(readme_files, capsys):
-    blocks = [body for language, body in BLOCKS if language == "console" and "$ parameter" in body]
+    blocks = [body for language, body in BLOCKS if language == "console" and "$ engparams" in body]
     assert blocks
     for body in blocks:
         for command, expected in re.findall(r"^\$ (.*)\n((?:(?!\$ ).*\n)*)", body, re.MULTILINE):
             args = shlex.split(command)
-            assert args[0] == "parameter"
+            assert args[0] == "engparams"
             output_file = args[args.index(">") + 1] if ">" in args else None
             code = main(args[1 : args.index(">")] if output_file else args[1:])
             out = capsys.readouterr().out
