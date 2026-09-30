@@ -7,7 +7,7 @@ from engparams.errors import ParameterError, UnitError
 from engparams.parameter import Dimension, Parameter
 from engparams.units import define, ureg
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "Dimension",
