@@ -1,3 +1,4 @@
+# Parameter file in the 0.1 format, plus forms added in 0.2
 test_parameters:
   singlename: [1, m]
   base_zheight: [0, m]
@@ -8,9 +9,18 @@ test_parameters:
     1: [120, deg]
     2: [240, deg]
   distal_cogs: [0.5, -]
-  end_affector_cog: 
+  end_affector_cog:
     x: [50, mm]
     y: [-1, mm]
     z: [0, mm]
   string_parameter: [string, -]
   pure_string_parameter: string
+  link_lengths: [[300, 250, 120], mm]
+  max_speed: 1500 rpm
+  tolerance: [1e-3, mm]
+  payload:
+    value: 2.5
+    units: kg
+    description: Rated payload
+  gear_ratio: 50
+  enabled: true
