@@ -19,7 +19,7 @@ pip install engparams
 pip install "engparams[pydantic]"
 
 # the development version
-pip install "engparams @ git+https://github.com/davidson-engineering/parameter.git"
+pip install "engparams @ git+https://github.com/davidson-engineering/engparams.git"
 ```
 
 Requires Python 3.11 or newer.

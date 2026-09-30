@@ -33,7 +33,7 @@ pydantic = ["pydantic>=2.7"]
 engparams = "engparams.cli:main"
 
 [project.urls]
-Repository = "https://github.com/davidson-engineering/parameter"
+Repository = "https://github.com/davidson-engineering/engparams"
 
 [dependency-groups]
 dev = [
