@@ -1,52 +1,66 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "parameter"
-description = "A class to hold parameters for studies"
-
-# If a project, then you can specify version here
-# version = "0.0.0"
-# If a module, then fetch version dynamically (see [tool.setuptools.dynamic] below)
+description = "Engineering parameters with units: load from YAML, convert to SI, calculate and tabulate."
 dynamic = ["version"]
-
 readme = "README.md"
-requires-python = ">=3.10"
-license = {file = "LICENSE"}
-authors = [
-  {email = "matthew@davidson.engineering"},
-  {name = "Matthew Davidson"}
-]
-
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Matthew Davidson", email = "matthew@davidson.engineering" }]
 classifiers = [
-    "Development Status :: 1 - Planning",
-    "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python :: 3.10",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
 ]
-
 dependencies = [
-  "pyyaml >= 6.0",
-  "prettytable >= 3.6.0",
-  "numpy",
+  "numpy>=1.26",
+  "pint>=0.24.4",
+  "prettytable>=3.12",
+  "pyyaml>=6.0.1",
 ]
-
-# If a module, then use fetch version from src/module_name/__init__.py
-[tool.setuptools.dynamic]
-version = {attr = "parameter.__version__"}
 
 [project.optional-dependencies]
-test = [
-  "pytest >= 7.1.1",
+pydantic = ["pydantic>=2.7"]
+
+[project.scripts]
+parameter = "parameter.cli:main"
+
+[project.urls]
+Repository = "https://github.com/davidson-engineering/parameter"
+
+[dependency-groups]
+dev = [
+  "mypy>=1.10",
+  "pydantic>=2.7",
+  "pytest>=8",
+  "ruff>=0.13",
+  "types-pyyaml>=6.0.1",
 ]
 
-# [project.urls]
-# homepage = "https://example.com"
-# documentation = "https://readthedocs.org"
-# repository = "https://github.com"
-# changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+[tool.setuptools.dynamic]
+version = { attr = "parameter.__version__" }
 
-# [project.scripts]
-# spam-cli = "spam:main_cli"
+[tool.pytest.ini_options]
+testpaths = ["test"]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
+filterwarnings = ["error"]
+xfail_strict = true
 
-# [project.gui-scripts]
-# spam-gui = "spam:main_gui"
+[tool.mypy]
+files = ["src"]
+warn_unused_ignores = true
+warn_redundant_casts = true
 
-# [project.entry-points."spam.magical"]
-# tomatoes = "spam:main_tomatoes"
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "C4", "PT", "NPY", "RUF"]

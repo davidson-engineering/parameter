@@ -1,209 +1,328 @@
-# Parameter
-## A class for handling parameters
+# parameter
 
-- Creates *Parameter* objects, that can be converted to SI units for calculations.
-- *Parameter* objects store original values and units.
-- *Parameter* objects can be read from a YAML file, or from a dictionary.
-- A dataclass can inherit from *Parameters*, allowing for specific parameter names to be ensured.
-- Operators such as add, multiply, divide and exponent are supported:
-    - Between Parameter objects, and other types of objects that also support these methods.
-    - Also on units, such as rad/s, kg/m^2.
-    - Note: exponents are not supported (yet) for unit outputs
-- See [parameter.conversion.py](src/parameter/conversion.py) for a full list of all possible conversions. Custom conversions are easily added.
+Engineering parameters with units, for studies, simulations and reports.
+
+- Keep a study's inputs in a readable YAML file, each value in the units it was specified in.
+- Load them into nested `Parameters`, convert them to SI and hand plain numbers to your calculation.
+- Do unit-safe arithmetic: `Parameter(10, "m") / Parameter(2, "s")` is `5 m/s`, and adding metres to seconds is an error.
+- Print parameter tables for reports as text, Markdown, HTML, CSV or LaTeX, from Python or the command line.
+
+Units are handled by [pint](https://pint.readthedocs.io), so every unit pint knows works, and
+parameters interoperate with pint quantities and numpy.
 
 ## Installation
-Option 1: Install as module straight from github using pip
+
 ```console
-# Install latest version of module
-pip install 'parameter @ git+https://github.com/davidson-engineering/parameter.git'
+pip install "parameter @ git+https://github.com/davidson-engineering/parameter.git"
 
-# Alternatively, one can force a specific version to be installed
-pip install 'parameter @ git+https://github.com/davidson-engineering/parameter.git@v0.1.0'
+# with pydantic support, for validated parameter schemas
+pip install "parameter[pydantic] @ git+https://github.com/davidson-engineering/parameter.git"
 ```
 
-Option 2: For development, clone from github to folder, make .venv and install using pip
+Requires Python 3.11 or newer.
+
+## Quick start
+
+Write the parameters in YAML, in whatever units are natural:
+
+```yaml
+# robot.yaml
+arm:
+  length: [1.2, m]
+  mass: 18 kg
+  joint_angles: [[0, 120, 240], deg]
+motor:
+  max_speed: 3000 rpm
+  torque:
+    value: 12
+    units: N.m
+    description: Continuous torque
+payload: [5000, g]
+gear_ratio: 50
+controller: RC-100
+```
+
+Load them, look them up, and convert them:
+
+```pycon
+>>> from parameter import Parameter, Parameters
+>>> params = Parameters.from_yaml("robot.yaml")
+>>> params["arm.length"]
+Parameter(1.2, 'm')
+>>> params.motor.max_speed
+Parameter(3000, 'rpm')
+>>> params.motor.torque * params.gear_ratio
+Parameter(600, 'N.m')
+>>> (params.motor.max_speed / params.gear_ratio).to("deg/s")
+Parameter(360.0, 'deg/s')
+>>> print(params.to_si())
++------------------+----------------------+-------+-------------------+
+| Parameter        |                Value | Units | Description       |
++------------------+----------------------+-------+-------------------+
+| arm.length       |                  1.2 | m     |                   |
+| arm.mass         |                   18 | kg    |                   |
+| arm.joint_angles | [0, 2.0944, 4.18879] | rad   |                   |
+| motor.max_speed  |              314.159 | rad/s |                   |
+| motor.torque     |                   12 | N.m   | Continuous torque |
+| payload          |                    5 | kg    |                   |
+| gear_ratio       |                   50 | -     |                   |
+| controller       |               RC-100 | -     |                   |
++------------------+----------------------+-------+-------------------+
+
+```
+
+Hand plain SI numbers to a calculation:
+
+```pycon
+>>> si = params.to_si().magnitudes()
+>>> si["payload"], si["motor"]["torque"]
+(5.0, 12)
+
+```
+
+## Parameter files
+
+Each leaf of a parameter file (or of a dict passed to `Parameters`) can be written as:
+
+| Form | Example | Result |
+| --- | --- | --- |
+| `[value, units]` | `[150, mm]` | `Parameter(150, 'mm')` |
+| array and units | `[[0, 120, 240], deg]` | `Parameter([0, 120, 240], 'deg')` |
+| number with units | `150 mm` | `Parameter(150, 'mm')` |
+| mapping | `{value: 150, units: mm, description: Stroke}` | `Parameter(150, 'mm', description='Stroke')` |
+| number or list of numbers | `50` | `Parameter(50, '-')` (dimensionless) |
+| anything else | `RC-100`, `"0042"`, `2024-01-01`, `true` | a non-numeric parameter, kept as is |
+
+Nested mappings become groups, and a mapping with a `value` key is a single parameter, so
+`value` cannot be used as a name. YAML is read with YAML 1.2 rules: `1e-3` is a number, and
+`on`, `yes` and dates are text.
+
+Units are written as pint understands them, with two conventions of their own: `.` multiplies
+(`N.m`, `kg.m^2`) and `-` means dimensionless. A product after `/` needs parentheses, as in
+`W/(m.K)`, because `W/m.K` would mean W.K/m. Mistakes are reported with their location, so a
+typo in a large file is easy to find:
+
+```pycon
+>>> Parameters({"motor": {"conductivity": [0.6, "W/m.K"]}})
+Traceback (most recent call last):
+...
+parameter.errors.UnitError: motor.conductivity: invalid units 'W/m.K': ambiguous, put the units after '/' in parentheses, as in 'W/(m.K)'
+>>> Parameters({"motor": {"torque": [12, "N.mm."]}})
+Traceback (most recent call last):
+...
+parameter.errors.UnitError: motor.torque: invalid units 'N.mm.': unexpected '.'
+
+```
+
+## Parameter
+
+A `Parameter` is an immutable value with units. It can be a number, a numpy array or, for
+bookkeeping, a non-numeric value such as a name or flag.
+
+```pycon
+>>> Parameter(10, "m") / Parameter(2, "s")
+Parameter(5.0, 'm/s')
+>>> Parameter(1, "ft") + Parameter(6, "inch")
+Parameter(1.5, 'ft')
+>>> Parameter(2, "m") ** 2
+Parameter(4, 'm^2')
+>>> Parameter(1, "m") + 1
+Traceback (most recent call last):
+...
+pint.errors.DimensionalityError: Cannot convert from 'meter' to 'dimensionless'
+
+```
+
+Comparisons convert units first, and `==` allows for floating point error (see
+`Parameter.isclose` for control over the tolerance):
+
+```pycon
+>>> Parameter(1, "m") == Parameter(1000, "mm")
+True
+>>> Parameter(300, "mm") < Parameter(1, "ft")
+True
+>>> Parameter(0.1, "m") + Parameter(0.2, "m") == Parameter(0.3, "m")
+True
+
+```
+
+Convert to any compatible units with `to()`, or to SI with `to_si()`. SI conversion keeps named
+SI units, so a torque in `kN.mm` becomes `N.m` rather than `kg.m^2/s^2`:
+
+```pycon
+>>> Parameter(1, "mile").to("km")
+Parameter(1.609344, 'km')
+>>> Parameter(3, "kN.mm").to_si()
+Parameter(3.0, 'N.m')
+>>> Parameter(0.1, "kg/mm^3").to_si()
+Parameter(100000000.0, 'kg/m^3')
+>>> Parameter(20, "degC").to_si()
+Parameter(293.15, 'K')
+
+```
+
+Parameters work with numpy functions, and with pint quantities through `.quantity`:
+
+```pycon
+>>> import numpy as np
+>>> np.hypot(Parameter(3, "m"), Parameter(400, "cm"))
+Parameter(5.0, 'm')
+>>> Parameter([1, 2, 3], "m").to("mm")
+Parameter([1000.0, 2000.0, 3000.0], 'mm')
+>>> f"{Parameter(3.14159, 'm'):.2f}"
+'3.14 m'
+
+```
+
+## Parameters
+
+`Parameters` is a nested mapping of groups and parameters. Items can be read with a dotted
+path (`params["arm.length"]`) or as attributes (`params.arm.length`), and set from any of the
+forms a parameter file accepts:
+
+```pycon
+>>> params["arm.reach"] = "0.9 m"
+>>> params.arm.reach
+Parameter(0.9, 'm')
+>>> "arm.reach" in params
+True
+
+```
+
+`merge()` layers overrides onto a copy, which suits studies built from a baseline:
+
+```pycon
+>>> heavy = params.merge({"arm": {"mass": [25, "kg"]}, "payload": "8 kg"})
+>>> heavy.arm.mass, heavy.arm.length, params.arm.mass
+(Parameter(25, 'kg'), Parameter(1.2, 'm'), Parameter(18, 'kg'))
+
+```
+
+`stack()` turns a group into a vector, converting to the units of its first member:
+
+```pycon
+>>> cog = Parameters({"x": [50, "mm"], "y": [-0.001, "m"], "z": [0, "mm"]})
+>>> cog.stack()
+Parameter([50.0, -1.0, 0.0], 'mm')
+
+```
+
+Other methods:
+
+- `flatten()` returns a flat dict of parameters keyed by path.
+- `to_dict()` and `to_yaml(path)` write data that `Parameters(...)` and `from_yaml()` read back.
+- `copy()` copies the group structure.
+
+## Tables
+
+`print(params)` shows a text table. `render()` produces other formats, with floats shown to
+`precision` significant figures:
+
+```pycon
+>>> print(params.arm.render("markdown", precision=3))
+| Parameter    |         Value | Units |
+| :----------- | ------------: | :---- |
+| length       |           1.2 | m     |
+| mass         |            18 | kg    |
+| joint_angles | [0, 120, 240] | deg   |
+| reach        |           0.9 | m     |
+
+```
+
+Table formats are `text`, `markdown`, `csv`, `html` and `latex`. The `yaml` and `json` formats
+write the parameters losslessly instead. For full control, `params.table()` returns a
+[PrettyTable](https://github.com/prettytable/prettytable). In Jupyter, a `Parameters` displays
+as an HTML table.
+
+## Validation with pydantic
+
+With the `pydantic` extra, `Parameter` and `Parameters` can be pydantic fields. They accept every
+parameter file form, and `Dimension` checks units:
+
+```pycon
+>>> from typing import Annotated
+>>> from pydantic import BaseModel, ValidationError
+>>> from parameter import Dimension
+>>> class Arm(BaseModel):
+...     length: Annotated[Parameter, Dimension("[length]")]
+...     mass: Annotated[Parameter, Dimension("kg")]
+>>> Arm(length=[1.2, "m"], mass="18 kg").length
+Parameter(1.2, 'm')
+>>> try:
+...     Arm(length="1.2 s", mass="18 kg")
+... except ValidationError as error:
+...     print(error.errors()[0]["msg"])
+Value error, expected units compatible with '[length]', got 's'
+
+```
+
+`Dimension` also works without pydantic: `Dimension("[length]").validate(parameter)`.
+
+## Command line
+
+The `parameter` command shows a parameter file as a table, optionally in SI units, or converts
+it to another format:
+
 ```console
-git clone https://github.com/davidson-engineering/parameter.git
-cd parameter
-python -m .venv .venv
-.venv/Scripts/activate.ps1 # If using powershell
-source .venv/bin/activate # If using Unix / MacOS
-pip install -e .
+$ parameter robot.yaml motor --si
++-----------+---------+-------+-------------------+
+| Parameter |   Value | Units | Description       |
++-----------+---------+-------+-------------------+
+| max_speed | 314.159 | rad/s |                   |
+| torque    |      12 | N.m   | Continuous torque |
++-----------+---------+-------+-------------------+
+
+$ parameter robot.yaml --si --format markdown > parameters.md
 ```
 
-## Simple Example Usage
-Some mixed units
-```python
-from parameter.parameter import Parameter
+Formats are `text`, `markdown`, `csv`, `html`, `latex`, `yaml` and `json`.
 
-p_length_large = Parameter(1, "m")
-p_length_small = Parameter(2, "mm")
-p_speed = Parameter([3,4,5], "mm/s")
-p_speed_slow = Parameter(3, "mm/min")
-p_torque = Parameter(3, 'N.m')
-p_torque_small = Parameter(3, 'N.mm')
-p_torque_large = Parameter(3, 'kN.mm')
-p_angular_speed = Parameter(2, "deg/min")
-p_angular_speed_rpm = Parameter(100, "rev/min")
-p_angular_speed_rph = Parameter(1000, "rev/hour")
-p_moment_inertia = Parameter(0.1, "kg/m^2")
+## Extending
 
+- **Units**: `parameter.define("smoot = 1.7018 * m")` adds a unit using
+  [pint's syntax](https://pint.readthedocs.io/en/stable/advanced/defining.html). Parameters use
+  pint's application registry (`parameter.ureg`), shared with any other pint code in the program.
+- **SI conversion**: non-SI units convert to the first unit in
+  `parameter.units.SI_DERIVED_UNITS` with the same dimensionality (`psi` to `Pa`, `kWh` to `J`),
+  otherwise to SI base units. Add entries to prefer others.
+- **Unit symbols**: `parameter.units.SYMBOLS` overrides how units are written in results.
+- **Calculations**: `Parameter.quantity` gives a pint quantity, and `Parameter(quantity)` wraps one
+  back up.
+- **Schemas**: pydantic models, as above.
+
+## Migrating from 0.1
+
+Version 0.2 rebuilds the package on pint. The 0.1 unit handling had errors that silently gave
+wrong results: comparisons were almost always true, compound units such as `kg/mm^3` converted
+by the wrong factor, and products and quotients kept the units of their first operand.
+
+| 0.1 | 0.2 |
+| --- | --- |
+| `from parameter.parameter import ...` | `from parameter import ...` (the old path still works for `Parameter`) |
+| `param.si_units` | `param.to_si()` |
+| `read_parameters_from_yaml(path)` | `Parameters.from_yaml(path)` |
+| `dict_to_parameters(d)` | `Parameters(d)` |
+| `params.table_pretty` | `params.table()` |
+| `params.values_only` | `params.to_si().magnitudes()` |
+| flat keys such as `end_affector_cog__x` | nested groups: `params["end_affector_cog.x"]` |
+| `group_by_prefix()`, `get_common_value()` | `params.end_affector_cog.stack()` |
+| dataclasses inheriting from `Parameters` | pydantic models, or `Parameters(dataclasses.asdict(obj))` for tables |
+| `param.value = ...` | parameters are immutable, so assign a new one |
+
+Behaviour changes to be aware of:
+
+- Adding or comparing parameters with incompatible units raises `DimensionalityError`, as does
+  adding a plain number to a parameter with units.
+- `float(parameter)` needs a dimensionless parameter. Use `parameter.to("m").value` for a
+  number in chosen units.
+- `str(Parameter(1, "m"))` is `"1 m"`, with a space.
+
+## Development
+
+```console
+uv sync
+uv run pytest
+uv run ruff check && uv run ruff format --check && uv run mypy
 ```
 
-## Read Parameters from YAML
-Read a set of several parameters from YAML file, and select a subset
-```python
-from parameter.parameter import read_parameters_from_yaml, Parameters
-
-# Read in a YAML file containing nested dictionaries of parameters
-parameters_dict = read_parameters_from_yaml("path/to/file.yaml")
-
-# Select a set of parameters
-parameters_set = parameters["subset_parameters"]
-
-```
-
-## Print out a pretty table
-In both original and SI units
-```python
-# Print out a neat table using PrettyTable
-table = parameters.table_pretty
-print(table)
-+-------------------------+-------+-------+
-|        Parameter        | Value | Units |
-+-------------------------+-------+-------+
-|        singlename       |   1   |   m   |
-|       base_zheight      |   0   |   m   |
-|       nacelle_mass      |  1500 |   g   |
-|      nacelle_radius     |  150  |   mm  |
-| arm_reference_angles__0 |   0   |  deg  |
-| arm_reference_angles__1 |  120  |  deg  |
-| arm_reference_angles__2 |  240  |  deg  |
-|       distal_cogs       |  0.5  |   -   |
-|   end_affector_cog__x   |   50  |   mm  |
-|   end_affector_cog__y   |   -1  |   mm  |
-|   end_affector_cog__z   |   0   |   mm  |
-+-------------------------+-------+-------+
-
-# Print out the parameters in SI units
-table_SI = parameters.si_units.table_pretty
-print(table_SI)
-+-------------------------+--------+-------+
-|        Parameter        | Value  | Units |
-+-------------------------+--------+-------+
-|        singlename       |   1    |   m   |
-|       base_zheight      |   0    |   m   |
-|       nacelle_mass      |  1.5   |   kg  |
-|      nacelle_radius     |  0.15  |   m   |
-| arm_reference_angles__0 |  0.0   |  rad  |
-| arm_reference_angles__1 | 2.094  |  rad  |
-| arm_reference_angles__2 | 4.189  |  rad  |
-|       distal_cogs       |  0.5   |   -   |
-|   end_affector_cog__x   |  0.05  |   m   |
-|   end_affector_cog__y   | -0.001 |   m   |
-|   end_affector_cog__z   |  0.0   |   m   |
-+-------------------------+--------+-------+
-```
-
-## Parameters class can be subclassed by a dataclass
-Allows for easy creation of Parameter type objects with mandatory arguments
-```python
-from parameter.parameter import Parameter, Parameters
-
-@dataclass
-class ParametersSubclass(Parameters):
-    param_a: Parameter
-    param_b: Parameter
-    param_c: Parameter
-
-
-param_dict = {
-    'param_a': Parameter(1, "m"),
-    'param_b': Parameter(2, "mm"),
-    'param_c': Parameter([3,4,5], "mm/s"),
-}
-
-params_subclass_object = ParametersSubclass(**param_dict)
-
-params_subclass_object_si = params_subclass_object.si_units
-
-print(params_subclass_object_si.table_pretty)
-+-----------+-----------------------+-------+
-| Parameter |         Value         | Units |
-+-----------+-----------------------+-------+
-|  param_a  |           1           |   m   |
-|  param_b  |         0.002         |   m   |
-|  param_c  | [0.003, 0.004, 0.005] |  m/s  |
-+-----------+-----------------------+-------+
-```
-
-## Parameters with common names can be grouped together
-Use the '__\*' suffix when specifying a grouped parameter name, where '\*' can be any character(s) of your choice.
-Calling the .grouped property on a Parameters object will return a Parameters object, with all the values combined into a single list. Units will be common.
-```python
-from parameter.parameter import read_parameters_from_yaml, Parameters
-
-parameters = Parameters(read_parameters_from_yaml("test/input_file.yaml")["test_parameters"])
-
-print(parameters.table_pretty)
-+-------------------------+-------+-------+
-|        Parameter        | Value | Units |
-+-------------------------+-------+-------+
-|        singlename       |   1   |   m   |
-|       base_zheight      |   0   |   m   |
-|       nacelle_mass      |  1500 |   g   |
-|      nacelle_radius     |  150  |   mm  |
-| arm_reference_angles__0 |   0   |  deg  |
-| arm_reference_angles__1 |  120  |  deg  |
-| arm_reference_angles__2 |  240  |  deg  |
-|       distal_cogs       |  0.5  |   -   |
-|   end_affector_cog__x   |   50  |   mm  |
-|   end_affector_cog__y   |   -1  |   mm  |
-|   end_affector_cog__z   |   0   |   mm  |
-+-------------------------+-------+-------+
-
-print(parameters.grouped.table_pretty)
-+----------------------+---------------+-------+
-|      Parameter       |     Value     | Units |
-+----------------------+---------------+-------+
-| arm_reference_angles | [0, 120, 240] |  deg  |
-|   end_affector_cog   |  [50, -1, 0]  |   mm  |
-|      singlename      |       1       |   m   |
-|     base_zheight     |       0       |   m   |
-|     nacelle_mass     |      1500     |   g   |
-|    nacelle_radius    |      150      |   mm  |
-|     distal_cogs      |      0.5      |   -   |
-+----------------------+---------------+-------+
-```
-
-### Operators are supported as well
-```python
-from parameter.parameter import Parameter
-
-p_a = Parameter(1, "m")
-p_b = Parameter(25, "mm")
-assert p_a + p_b == Parameter(1.025, "m")
-assert p_a - p_b == Parameter(0.975, "m")
-assert p_a * p_b == Parameter(0.025, "m") # TODO: this should be m^2
-assert p_a / p_b == Parameter(40, "m")
-assert p_a + p_b == param_b + param_a
-
-p_c = Parameter(300, "mm")
-p_d = Parameter(40, "m")
-assert p_d > p_c
-assert p_c < p_d
-
-p_e = Parameter(12, 'ft')
-assert p_e + p_a != Parameter(13, 'ft')
-assert p_e + p_a == Parameter(4.6576, 'm')
-
-p_f = Parameter(3.6576, 'mm^3')
-p_g = Parameter(3.6576E-9, 'm^3')
-assert p_f == p_g # Note small allowance for error of 1E-10 (configurable)
-
-# If operator is applied to an int,
-# then Parameter will not be converted to SI automatically
-p_h = Parameter(36.487, 'MPa')
-assert p_h // 10 == 3
-assert p_h.si_units // 1E6 == p_h // 1
-```
+The examples in this README are run as part of the test suite.
