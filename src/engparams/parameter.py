@@ -14,8 +14,8 @@ import numpy as np
 import pint
 import pint.compat
 
-from parameter import units as _units
-from parameter.errors import ParameterError
+from engparams import units as _units
+from engparams.errors import ParameterError
 
 REL_TOL = 1e-9
 """Default relative tolerance for ``==`` and :meth:`Parameter.isclose`."""
@@ -205,7 +205,7 @@ class Parameter:
         return Parameter(quantity.magnitude, units, self._description)
 
     def to_si(self) -> Parameter:
-        """Convert to coherent SI units (see :func:`parameter.units.si_units`).
+        """Convert to coherent SI units (see :func:`engparams.units.si_units`).
 
         Non-numeric parameters are returned unchanged.
         """

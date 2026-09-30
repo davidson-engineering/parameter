@@ -2,7 +2,7 @@ from typing import Annotated
 
 import pytest
 
-from parameter import Dimension, Parameter, ParameterError, Parameters, UnitError
+from engparams import Dimension, Parameter, ParameterError, Parameters, UnitError
 
 pydantic = pytest.importorskip("pydantic")
 

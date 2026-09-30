@@ -2,9 +2,9 @@ import math
 
 import pytest
 
-from parameter import Parameter, UnitError, define, ureg
-from parameter import units as units_module
-from parameter.units import format_units, parse_dimensionality, parse_units, si_units
+from engparams import Parameter, UnitError, define, ureg
+from engparams import units as units_module
+from engparams.units import format_units, parse_dimensionality, parse_units, si_units
 
 
 @pytest.mark.parametrize("text", [None, "", " ", "-", "1", "dimensionless"])

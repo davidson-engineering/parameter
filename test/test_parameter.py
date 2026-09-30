@@ -6,7 +6,7 @@ import numpy as np
 import pint
 import pytest
 
-from parameter import DimensionalityError, Parameter, ParameterError, UnitError, ureg
+from engparams import DimensionalityError, Parameter, ParameterError, UnitError, ureg
 
 # Construction ---------------------------------------------------------------
 
@@ -563,6 +563,6 @@ def test_array_conversion_strips_units_with_a_warning():
 
 
 def test_complex_values_respect_precision():
-    from parameter.parameter import format_value
+    from engparams.parameter import format_value
 
     assert format_value(1 / 3 + 2j, 3) == "0.333+2j"

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 import pint
 from pint.util import to_units_container
 
-from parameter.errors import UnitError
+from engparams.errors import UnitError
 
 if TYPE_CHECKING:
     from pint.util import UnitsContainer

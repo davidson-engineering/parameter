@@ -1,4 +1,4 @@
-# parameter
+# engparams
 
 Engineering parameters with units, for studies, simulations and reports.
 
@@ -13,10 +13,13 @@ parameters interoperate with pint quantities and numpy.
 ## Installation
 
 ```console
-pip install "parameter @ git+https://github.com/davidson-engineering/parameter.git"
+pip install engparams
 
 # with pydantic support, for validated parameter schemas
-pip install "parameter[pydantic] @ git+https://github.com/davidson-engineering/parameter.git"
+pip install "engparams[pydantic]"
+
+# the development version
+pip install "engparams @ git+https://github.com/davidson-engineering/parameter.git"
 ```
 
 Requires Python 3.11 or newer.
@@ -45,7 +48,7 @@ controller: RC-100
 Load them, look them up, and convert them:
 
 ```pycon
->>> from parameter import Parameter, Parameters
+>>> from engparams import Parameter, Parameters
 >>> params = Parameters.from_yaml("robot.yaml")
 >>> params["arm.length"]
 Parameter(1.2, 'm')
@@ -106,11 +109,11 @@ typo in a large file is easy to find:
 >>> Parameters({"motor": {"conductivity": [0.6, "W/m.K"]}})
 Traceback (most recent call last):
 ...
-parameter.errors.UnitError: motor.conductivity: invalid units 'W/m.K': ambiguous, put the units after '/' in parentheses, as in 'W/(m.K)'
+engparams.errors.UnitError: motor.conductivity: invalid units 'W/m.K': ambiguous, put the units after '/' in parentheses, as in 'W/(m.K)'
 >>> Parameters({"motor": {"torque": [12, "N.mm."]}})
 Traceback (most recent call last):
 ...
-parameter.errors.UnitError: motor.torque: invalid units 'N.mm.': unexpected '.'
+engparams.errors.UnitError: motor.torque: invalid units 'N.mm.': unexpected '.'
 
 ```
 
@@ -242,7 +245,7 @@ parameter file form, and `Dimension` checks units:
 ```pycon
 >>> from typing import Annotated
 >>> from pydantic import BaseModel, ValidationError
->>> from parameter import Dimension
+>>> from engparams import Dimension
 >>> class Arm(BaseModel):
 ...     length: Annotated[Parameter, Dimension("[length]")]
 ...     mass: Annotated[Parameter, Dimension("kg")]
@@ -260,11 +263,11 @@ Value error, expected units compatible with '[length]', got 's'
 
 ## Command line
 
-The `parameter` command shows a parameter file as a table, optionally in SI units, or converts
+The `engparams` command shows a parameter file as a table, optionally in SI units, or converts
 it to another format:
 
 ```console
-$ parameter robot.yaml motor --si
+$ engparams robot.yaml motor --si
 +-----------+---------+-------+-------------------+
 | Parameter |   Value | Units | Description       |
 +-----------+---------+-------+-------------------+
@@ -272,33 +275,34 @@ $ parameter robot.yaml motor --si
 | torque    |      12 | N.m   | Continuous torque |
 +-----------+---------+-------+-------------------+
 
-$ parameter robot.yaml --si --format markdown > parameters.md
+$ engparams robot.yaml --si --format markdown > parameters.md
 ```
 
 Formats are `text`, `markdown`, `csv`, `html`, `latex`, `yaml` and `json`.
 
 ## Extending
 
-- **Units**: `parameter.define("smoot = 1.7018 * m")` adds a unit using
+- **Units**: `engparams.define("smoot = 1.7018 * m")` adds a unit using
   [pint's syntax](https://pint.readthedocs.io/en/stable/advanced/defining.html). Parameters use
-  pint's application registry (`parameter.ureg`), shared with any other pint code in the program.
+  pint's application registry (`engparams.ureg`), shared with any other pint code in the program.
 - **SI conversion**: non-SI units convert to the first unit in
-  `parameter.units.SI_DERIVED_UNITS` with the same dimensionality (`psi` to `Pa`, `kWh` to `J`),
+  `engparams.units.SI_DERIVED_UNITS` with the same dimensionality (`psi` to `Pa`, `kWh` to `J`),
   otherwise to SI base units. Add entries to prefer others.
-- **Unit symbols**: `parameter.units.SYMBOLS` overrides how units are written in results.
+- **Unit symbols**: `engparams.units.SYMBOLS` overrides how units are written in results.
 - **Calculations**: `Parameter.quantity` gives a pint quantity, and `Parameter(quantity)` wraps one
   back up.
 - **Schemas**: pydantic models, as above.
 
 ## Migrating from 0.1
 
-Version 0.2 rebuilds the package on pint. The 0.1 unit handling had errors that silently gave
+Version 0.2 renames the package from `parameter` to `engparams` (on PyPI, `parameter` is an
+unrelated project) and rebuilds it on pint. The 0.1 unit handling had errors that silently gave
 wrong results: comparisons were almost always true, compound units such as `kg/mm^3` converted
 by the wrong factor, and products and quotients kept the units of their first operand.
 
 | 0.1 | 0.2 |
 | --- | --- |
-| `from parameter.parameter import ...` | `from parameter import ...` (the old path still works for `Parameter`) |
+| `from parameter.parameter import ...` | `from engparams import ...` |
 | `param.si_units` | `param.to_si()` |
 | `read_parameters_from_yaml(path)` | `Parameters.from_yaml(path)` |
 | `dict_to_parameters(d)` | `Parameters(d)` |
@@ -326,3 +330,7 @@ uv run ruff check && uv run ruff format --check && uv run mypy
 ```
 
 The examples in this README are run as part of the test suite.
+
+To release, set `__version__` in `src/engparams/__init__.py`, merge to `main`, and publish a
+GitHub release tagged with that version (for example `v0.2.0`). The Release workflow tests,
+builds and publishes it to PyPI using trusted publishing.

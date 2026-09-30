@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from parameter import Parameters
+from engparams import Parameters
 
 DATA = Path(__file__).parent / "input_file.yaml"
 

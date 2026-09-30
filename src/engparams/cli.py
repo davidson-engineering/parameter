@@ -9,15 +9,15 @@ from pathlib import Path
 
 import yaml
 
-from parameter import __version__
-from parameter.collection import DATA_FORMATS, TABLE_FORMATS, Parameters
-from parameter.errors import ParameterError
-from parameter.parameter import Parameter
+from engparams import __version__
+from engparams.collection import DATA_FORMATS, TABLE_FORMATS, Parameters
+from engparams.errors import ParameterError
+from engparams.parameter import Parameter
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="parameter",
+        prog="engparams",
         description="Show a YAML or JSON parameter file as a table, optionally in SI units.",
     )
     parser.add_argument("file", type=Path, help="parameter file to read")
@@ -70,5 +70,5 @@ def _positive_int(text: str) -> int:
 
 
 def _fail(message: str) -> int:
-    print(f"parameter: error: {message}", file=sys.stderr)
+    print(f"engparams: error: {message}", file=sys.stderr)
     return 1

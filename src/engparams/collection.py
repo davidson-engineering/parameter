@@ -13,8 +13,8 @@ from typing import IO, Any, Self, TypeAlias
 import yaml
 from prettytable import PrettyTable
 
-from parameter.errors import ParameterError
-from parameter.parameter import Parameter, format_value
+from engparams.errors import ParameterError
+from engparams.parameter import Parameter, format_value
 
 Node: TypeAlias = "Parameter | Parameters"
 

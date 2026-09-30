@@ -2,10 +2,10 @@
 
 from pint import DimensionalityError
 
-from parameter.collection import Parameters
-from parameter.errors import ParameterError, UnitError
-from parameter.parameter import Dimension, Parameter
-from parameter.units import define, ureg
+from engparams.collection import Parameters
+from engparams.errors import ParameterError, UnitError
+from engparams.parameter import Dimension, Parameter
+from engparams.units import define, ureg
 
 __version__ = "0.2.0"
 
