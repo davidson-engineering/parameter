@@ -55,7 +55,6 @@ xfail_strict = true
 
 [tool.mypy]
 files = ["src"]
-python_version = "3.11"
 warn_unused_ignores = true
 warn_redundant_casts = true
 

@@ -508,7 +508,8 @@ def _format_array(array: np.ndarray, number: Callable[[Any], str]) -> str:
 
 # Make pint defer to Parameter in mixed operations such as ``quantity * parameter``,
 # the same mechanism pint uses for xarray and pint-pandas.
-pint.compat.upcast_type_map[  # type: ignore[index]  # typed as Mapping, a dict at runtime
+# pint < 0.26 types the map as a read-only Mapping; it is a dict at runtime.
+pint.compat.upcast_type_map[  # type: ignore[index, unused-ignore]
     f"{Parameter.__module__}.{Parameter.__qualname__}"
 ] = Parameter
 
